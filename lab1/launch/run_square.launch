@@ -1,0 +1,4 @@
+<launch>
+	<node name="view" pkg="turtlesim" type="turtlesim_node"/>
+	<node name="command" pkg="lab1" type="turtleBoss"/>
+</launch>
