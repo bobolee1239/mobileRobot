@@ -12,8 +12,8 @@ catkin_package()
 ## Install ##
 #############
 
-install(PROGRAMS
-   scripts/turtleBoss.js
-   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(PROGRAMS
+#   scripts/turtleBoss.js
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
