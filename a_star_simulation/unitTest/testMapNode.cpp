@@ -7,7 +7,7 @@
 int main() {
     MapNode tmp[6];
     tmp[0] = MapNode(0, 1);
-    tmp[1] = MapNode(1, 1, &tmp[0]);
+    tmp[1] = MapNode(0, 1, &tmp[0]);
     tmp[2] = MapNode(0, 2, &tmp[0]);
     tmp[3] = MapNode(2, 2, &tmp[0]);
     tmp[4] = MapNode(0, 3, &tmp[0]);
@@ -19,6 +19,8 @@ int main() {
     tmp[3].setFCost(5);
     tmp[4].setFCost(3);
     tmp[5].setFCost(4);
+
+    std::cout << " == ? " << (tmp[0] == tmp[1]) << std::endl;
 
     std::vector<MapNode> map(tmp, tmp+6);
     auto comparision = std::greater<MapNode>();

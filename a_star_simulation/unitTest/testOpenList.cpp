@@ -32,12 +32,31 @@ int main(int argc, char* argv[]) {
     list.pushNodes(canidates);
     std::cout << list << std::endl;
 
+    MapNode* tmp;
+    if ((tmp = list.contains(MapNode(3, 3)))) {
+        std::cout << "Open list contains (3, 3) " << std::endl;
+        std::cout << *tmp << std::endl;
+    }
+    if ((tmp = list.contains(MapNode(4, 3)))) {
+        std::cout << "Open list contains (4, 3) " << std::endl;
+        std::cout << *tmp << std::endl;
+    }
+
     auto second = list.popNode();
     std::cout << "2. " << second << std::endl << std::endl;
 
     canidates = getAvailableAdjacents(&second, dest);
     list.pushNodes(canidates);
     std::cout << list << std::endl;
+
+    if ((tmp = list.contains(MapNode(3, 3)))) {
+        std::cout << "Open list contains (3, 3) " << std::endl;
+        std::cout << *tmp << std::endl;
+    }
+    if ((tmp = list.contains(MapNode(4, 3)))) {
+        std::cout << "Open list contains (4, 3) " << std::endl;
+        std::cout << *tmp << std::endl;
+    }
 
     auto third = list.popNode();
     std::cout << "3. " << third << std::endl << std::endl;
