@@ -10,7 +10,7 @@
  ***********************************************/
 nav_msgs::OccupancyGrid map;
 
-void MapRawCallback(const nav_msgs::OccupancyGrid& msg);
+void mapRawCallback(const nav_msgs::OccupancyGrid& msg);
 
 int main(int argc, char* argv[]) {
     //  init ros node and naming the node
@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 
     //  publisher to publish to topic: map
     ros::Publisher  pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1);
-    ros::Subscriber sub = nh.subscribe("map_raw", 10, &MapRawCallback);
+    ros::Subscriber sub = nh.subscribe("map_raw", 10, &mapRawCallback);
 
     //  looping in 10 Hz
     ros::Rate rate(10);
