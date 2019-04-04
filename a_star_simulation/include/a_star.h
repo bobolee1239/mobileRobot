@@ -77,6 +77,9 @@ class MapNode : public Node {
     MapNode(int x, int y) : Node(x, y) {
         parent = NULL;
     }
+    MapNode(int x, int y, double p) : Node(x, y), occupiedProb(p) {
+        parent = NULL;
+    }
     MapNode(int x, int y, MapNode* parentPtr) : Node(x, y) {
         parent = parentPtr;
     }
@@ -87,27 +90,67 @@ class MapNode : public Node {
     double getGCost() const {return gCost;}
     double getHCost() const {return hCost;}
     double getFCost() const {return fCost;}
+    double getOccupiedProb() const {return occupiedProb;}
 
-    void setGCost(double var) {gCost = var;}
-    void setHCost(double var) {hCost = var;}
-    void setFCost(double var) {fCost = var;}
-
-    MapNode& updateCosts(const MapNode& dest) {
-        /* diagonal element increase 1.4 ~= sqrt(2) */
-        if (parent) {
-            gCost = parent->gCost;
-            gCost += ((abs(_x - parent->_x) + abs(_y - parent->_x)) > 1) ? 1.4 : 1;
-        } else {
-            /* origin */
-            gCost = 0.0;
-        }
-        hCost = abs(_x - dest._x) + abs(_y - dest._y);
-        fCost = gCost + hCost;
-
+    MapNode& setGCost(double var) {
+        gCost = var;
+        return *this;
+    }
+    MapNode& setHCost(double var) {
+        hCost = var;
+        return *this;
+    }
+    MapNode& setFCost(double var) {
+        fCost = var;
+        return *this;
+    }
+    MapNode& setOccupiedProb(double p) {
+        occupiedProb = p;
         return *this;
     }
 
+    /**
+     **  computeCosts:
+     **    @para src  : the adjacent node we come from
+     **    @para dest : the destination we're about to go
+     **/
+    MapNode& computeCostsNSetParent(MapNode* src, const Node& dest) {
+        /* compute g cost */
+        gCost  = src->gCost;
+        gCost += ((abs(_x - src->_x) + abs(_y - src->_y)) > 1) ? 1.4 : 1;
+        /* compute h cost */
+        hCost  = abs(_x - dest.getX()) + abs(_y - dest.getY());
+        /* compute f cost */
+        fCost  = gCost + hCost;
+        /* set parent */
+        parent = src;
+        return *this;
+    }
+    bool reComputeCostsNChangeParent(MapNode* src, const Node& dest) {
+        double tmpGCost = 0.0;
+        double tmpHCost = 0.0;
+        double tmpFCost = 0.0;
+        /* compute g cost */
+        tmpGCost  = src->gCost;
+        tmpGCost += ((abs(_x - src->_x) + abs(_y - src->_y)) > 1) ? 1.4 : 1;
+        /* compute h cost */
+        tmpHCost  = abs(_x - dest.getX()) + abs(_y - dest.getY());
+        /* compute f cost and change parent if neccessary */
+        if ((tmpFCost  =  tmpGCost + tmpHCost) < fCost) {
+            parent = src;
+            fCost = tmpFCost;
+            gCost = tmpGCost;
+            hCost = tmpHCost;
+            //  return we modify the cost and parent.
+            return true;
+        } else {
+            //  return that we do nothing.
+            return false;
+        }
+    }
+
     /* without consider propability */
+    /*
     std::vector<MapNode> getAdjacents() {
         std::vector<MapNode> adjacents;
 
@@ -125,22 +168,13 @@ class MapNode : public Node {
 
         return adjacents;
     }
+    */
 
     std::vector<MapNode> getPath() {
         std::vector<MapNode> path({*this});
         MapNode* curPos = this;
-        /*
-#ifdef DEBUG
-        std::cout << static_cast<Node>(*curPos) << " -> ";
-#endif
-        */
         while (curPos -> parent) {
             curPos = curPos -> parent;
-        /*
-#ifdef DEBUG
-        std::cout << static_cast<Node>(*curPos) << " -> ";
-#endif
-*/
             path.insert(path.begin(), *curPos);
         }
 
@@ -151,7 +185,7 @@ class MapNode : public Node {
     double gCost;
     double hCost;
     double fCost;
-public:
+    double occupiedProb;
     /* single parent */
     MapNode* parent;
 };
@@ -193,66 +227,60 @@ std::ostream& operator << (std::ostream& out, const MapNode& n) {
 class OpenList {
  public:
     friend std::ostream& operator << (std::ostream& out, const OpenList& list);
-    OpenList() {}
-    explicit OpenList(std::vector<MapNode> nodes) {
-        /* push into heap one after another */
-        for (auto&& node : nodes) {
-            heap.push_back(node);
-            std::push_heap(heap.begin(), heap.end(), comparision);
-        }
+    OpenList() {
+        /* greater than comparision for minimum heap */
+        comparison = [](const MapNode* lhs, const MapNode* rhs) {
+            return lhs->fCost > rhs->fCost;
+        };
     }
 
     bool empty() const {
         return heap.empty();
     }
 
-    MapNode* contains(const MapNode& n) {
-        auto itr = std::find(heap.begin(), heap.end(), n);
-        if (heap.end() == itr) {
-            return NULL;
-        } else {
-            return &(*itr);
-        }
-    }
-
-    OpenList& pushNode(const MapNode& node) {
-        heap.push_back(node);
-        std::push_heap(heap.begin(), heap.end(), comparision);
+    OpenList& clear() {
+        heap.clear();
         return *this;
     }
 
-    OpenList& pushNodes(const std::vector<MapNode> nodes) {
-        for (auto& node : nodes) {
-            pushNode(node);
+    /**
+     **     contains
+     **       @para mapNode : node to match
+     **
+     **       Returns:
+     **         - the actual node in the open list
+     **/
+    MapNode* contains(const MapNode* const n) {
+        for (auto&& nPtr : heap) {
+            if (*nPtr == *n) {
+                return nPtr;
+            }
         }
+        return NULL;
+    }
+
+    OpenList& pushNode(MapNode* const nodePtr) {
+        heap.push_back(nodePtr);
+        std::push_heap(heap.begin(), heap.end(), comparison);
         return *this;
     }
 
-    MapNode popNode() {
-        std::pop_heap(heap.begin(), heap.end(), comparision);
+    MapNode* popNode() {
+        std::pop_heap(heap.begin(), heap.end(), comparison);
         auto minFCostNode = heap.back();
         heap.pop_back();
 
         return minFCostNode;
     }
 
-    OpenList& modifyNode(const MapNode& oldNode, const MapNode& newNode) {
-        for (auto&& n : heap) {
-            if (n == oldNode) {
-                n.fCost  = newNode.fCost;
-                n.hCost  = newNode.hCost;
-                n.gCost  = newNode.gCost;
-                n.parent = newNode.parent;
-            }
-        }
-        std::make_heap(heap.begin(), heap.end(), comparision);
-
+    OpenList& reHeap() {
+        std::make_heap(heap.begin(), heap.end(), comparison);
         return *this;
     }
 
  private:
-    std::greater<MapNode> comparision;
-    std::vector<MapNode>  heap;
+    bool (*comparison)(const MapNode*, const MapNode*);
+    std::vector<MapNode*>  heap;
 };
 
 std::ostream& operator << (std::ostream& out, const OpenList& list) {
@@ -317,48 +345,81 @@ class Map {
         this->width  = width;
         this->height = height;
         /* build up map and close list */
-        std::for_each(rawMap.begin(), rawMap.end(), [this](int8_t& e){
-            if (e >= 0) {
+        int8_t e;
+        for (int i=0, j=rawMap.size(); i < j; ++i) {
+            e = rawMap[i];
+            if (e < 0) {
+                /* unknown node -> we cannot go there */
+                mapNodes.push_back(new MapNode(i%width, i/width, e));
+                closeList.push_back(true);
+            } else {
                 double prob = static_cast<double>(e) / MAP_OCCUPIED;
-                map.push_back(prob);
+                mapNodes.push_back(new MapNode(i%width, i/width, prob));
                 /***************************************************
                  ** Bot cannot move to somewhere with 0.5 prob that
                  ** was occupied.
                  ***************************************************/
                 closeList.push_back(prob > 0.5);
-            } else {
-                /* unknown node -> we cannot go there */
-                map.push_back(e);
-                closeList.push_back(true);
             }
-        });
+        }
+    }
+
+    ~Map() {
+        for (auto&& nPtr : mapNodes) {
+            delete nPtr;
+        }
     }
 
     /* In case we'll update the map */
     Map& updateMap(std::vector<int8_t> rawMap) {
-        std::for_each(rawMap.begin(), rawMap.end(), [this](int8_t& e){
-            if (e >= 0) {
-                double prob = static_cast<double>(e) / MAP_OCCUPIED;
-                map.push_back(prob);
-                closeList.push_back(prob > 0.5);
-            } else {
-                map.push_back(e);
+        /* clear whole map and rebuild */
+        this->~Map();
+        int8_t e;
+        for (int i=0, j=rawMap.size(); i < j; ++i) {
+            e = rawMap[i];
+            if (e < 0) {
+                /* unknown node -> we cannot go there */
+                mapNodes.push_back(new MapNode(i%width, i/width, e));
                 closeList.push_back(true);
+            } else {
+                double prob = static_cast<double>(e) / MAP_OCCUPIED;
+                mapNodes.push_back(new MapNode(i%width, i/width, prob));
+                /***************************************************
+                 ** Bot cannot move to somewhere with 0.5 prob that
+                 ** was occupied.
+                 ***************************************************/
+                closeList.push_back(prob > 0.5);
             }
-        });
+        }
         return *this;
     }
 
-    Map& resetCloseList() {
+    Map& reset() {
+        /**
+         ** 1. Reset close list
+         ** 2. Reset parent of all map nodes
+         ** 3. Reset empty open list
+         **/
         closeList.clear();
-        std::for_each(map.begin(), map.end(), [this](double& e){
+        std::for_each(mapNodes.begin(), mapNodes.end(), [this](MapNode* e){
             if (e >= 0) {
-                closeList.push_back(e > 0.5);
+                closeList.push_back(e->occupiedProb > 0.5);
             } else {
                 closeList.push_back(true);
             }
+            e->parent = NULL;
         });
+        openList.clear();
+
         return *this;
+    }
+
+    MapNode* at(int x, int y) const {
+        return mapNodes[x + y*width];
+    }
+
+    MapNode* at(const Node& n) {
+        return mapNodes[n.getX() + n.getY()*width];
     }
 
     Robot getRobot() const {return mobileBot;}
@@ -369,26 +430,37 @@ class Map {
     }
 
     double isOccupiedAt(int x, int y) const {
-        return map[x + y*width];
+        return mapNodes[x + y*width]->occupiedProb > 0.9;
     }
 
-    bool isOuttaMap(const Node& n) const {
-        return ((n.getX() < 0) || (n.getX() > width)
-                    || (n.getY() < 0) || (n.getY() > height));
+    double isOccupiedAt(const Node* const n) const {
+        return mapNodes[n->getX() + (n->getY())*width]->occupiedProb > 0.9;
     }
 
-    bool inCloseList(const Node& n) const {
+    bool isOuttaMap(const Node* const n) const {
+        return ((n->getX() < 0) || (n->getX() > width)
+                    || (n->getY() < 0) || (n->getY() > height));
+    }
+
+    bool isOuttaMap(int x, int y) const {
+        return ((x < 0) || (x > width)
+                    || (y < 0) || (y > height));
+    }
+
+    bool inCloseList(const Node* const n) const {
         /* transform 2D info th 1D info */
-        return closeList[n.getX() + n.getY()*width];
+        return closeList[n->getX() + n->getY()*width];
     }
 
+    /*
     bool isObstacle(const Node& n) const {
         return (map[n.getX() + n.getY()*width] > 0.9);
     }
+    */
 
     std::vector<bool> getCloseList() const { return closeList; }
     OpenList getOpenList() const { return openList; }
-    std::vector<double> getMap() const { return map; }
+    std::vector<MapNode*> getMap() const { return mapNodes; }
 
     /**************************************************************
      ** DESCRIPTION:
@@ -396,55 +468,72 @@ class Map {
      **     2. Sifting nodes that not in map and in close list
      **     3. updateCost of the mapNode if it is available
      **************************************************************/
-    std::vector<MapNode> getAvailableAdjacents(MapNode* const n, const MapNode& dest) {
-        auto canidates = n->getAdjacents();
+    std::vector<MapNode*> getAvailableAdjacents(const MapNode* const n) {
+        /* find all adjacent nodes */
+        std::vector<MapNode*> adjacents;
+        //  horizontal
+        adjacents.push_back(this->at(n->_x + 1, n->_y));
+        adjacents.push_back(this->at(n->_x - 1, n->_y));
+        adjacents.push_back(this->at(n->_x    , n->_y + 1));
+        adjacents.push_back(this->at(n->_x    , n->_y - 1));
 
-        for (auto itr = canidates.begin(); itr != canidates.end(); ) {
+        //  diagonal
+        adjacents.push_back(this->at(n->_x + 1, n->_y + 1));
+        adjacents.push_back(this->at(n->_x + 1, n->_y - 1));
+        adjacents.push_back(this->at(n->_x - 1, n->_y + 1));
+        adjacents.push_back(this->at(n->_x - 1, n->_y - 1));
+
+        for (auto itr = adjacents.begin(); itr != adjacents.end(); ) {
             /**************************************
              **  1. Check it's inside the map
              **  2. Check not in close list
              **************************************/
-            if (isOuttaMap(*itr) || inCloseList(*itr) || isObstacle(*itr)) {
-                itr = canidates.erase(itr);
+            if (isOuttaMap(*itr) || inCloseList(*itr) || isOccupiedAt(*itr)) {
+                //  not available
+                itr = adjacents.erase(itr);
             } else {
-                itr->updateCosts(dest);
+                //  available
                 ++itr;
             }
         }
-        return canidates;
+        return adjacents;
     }
 
 
-    std::vector<MapNode> aStar(const MapNode& dest) {
+    std::vector<MapNode> aStar(const Node& dest) {
+#ifdef DEBUG
+        std::cout << "========== A* BEGIN ========== " << std::endl;
+#endif
         /* clear closeList before calling A* algorithm */
-        resetCloseList();
+        reset();
         /* if path is empty => no path exists */
         std::vector<MapNode> path;
         /************************************************
          **  1. Add the staring position in open list.
          ************************************************/
-        openList.pushNode(MapNode(mobileBot.getPosition()));
+        openList.pushNode(this->at(mobileBot.getPosition()));
 
+        MapNode* walkTo;
         while (!openList.empty()) {
         /************************************************
          ** 2. Find the lowest F cost in open list and
          **    Add it to close list.
          **    [Done] if the node is the destination.
          ************************************************/
-            auto walkTo = openList.popNode();
-            std::cout << "walk to " << walkTo << std::endl;
-            //  return the path if it's the destination
-            if (walkTo == dest) {
+            walkTo = openList.popNode();
+#ifdef DEBUG
+            std::cout << " - walk to " << *walkTo << std::endl;
+#endif
+            /* return the path if it's the destination */
+            if (*walkTo == dest) {
                 /* bottom up to get whole path */
 #ifdef DEBUG
-                std::cout << "A* done!" << std::endl;
+                std::cout << "========== A* END ========== " << std::endl;
 #endif
-
-                // return walkTo.getPath();
-                return std::vector<MapNode>({walkTo});
+                return walkTo->getPath();
             }
-            //  add it to close list.
-            closeList[walkTo.getX() + walkTo.getY() * width] = true;
+            /*  add walked node to close list. */
+            closeList[walkTo->getX() + walkTo->getY() * width] = true;
 
          /***********************************************
           ** 3. Add adjacent nodes and
@@ -453,38 +542,51 @@ class Map {
           ** 4. If new cost is better than before =>
           **    change the parent of the node
           ***********************************************/
-            auto canidates = getAvailableAdjacents(&walkTo, dest);
-#ifdef DEBUG
-                    std::cout << "canidates(sifted): ";
-                    for (auto&& c : canidates) {
-                        std::cout << c << std::endl;
-                    }
-#endif
+            auto adjacents = getAvailableAdjacents(walkTo);
             MapNode* tmpNodeInOpenList;
-            for (auto&& node : canidates) {
-                if ((tmpNodeInOpenList = openList.contains(node))) {
-                    if (*tmpNodeInOpenList > node) {
-                        tmpNodeInOpenList -> parent = &walkTo;
+            for (auto&& nodePtr : adjacents) {
+                if ((tmpNodeInOpenList = openList.contains(nodePtr))) {
+                    /**
+                     **     If it's already in open list
+                     **  => 1. Recompute Costs
+                     **  => 2.|(1) Change Parent if neccessary
+                     **       |(2) Do nothing
+                     **/
+                    if (tmpNodeInOpenList->reComputeCostsNChangeParent(walkTo, dest)) {
+#ifdef DEBUG
+                        std::cout << "\t[MODIFIED] "
+                                  << tmpNodeInOpenList << std::endl;
+#endif
+                        openList.reHeap();
                     }
                 } else {
+                    /**
+                     **     If it's not in open list
+                     **  => 1. Compute Costs
+                     **  => 2. Add it into open list
+                     **/
+                    nodePtr->computeCostsNSetParent(walkTo, dest);
+                    openList.pushNode(nodePtr);
 #ifdef DEBUG
-                    std::cout << "Adding map node: " << node << "..." << std::endl;
+                    std::cout << "\t * Adding " << *nodePtr << std::endl;
 #endif
-                    openList.pushNode(node);
                 }
             }
+#ifdef DEBUG
+                    std::cout << std::endl;
+#endif
         }
         return path;
     }
 
  private:
-    Robot               mobileBot;
-    std::vector<bool>   closeList;      // same size of map, true: occuipied
-    OpenList            openList;       // heap based
-    std::vector<double> map;            // contains prob that node
-                                        // might be occupied
-    unsigned int        width;
-    unsigned int        height;
+    Robot                 mobileBot;
+    std::vector<bool>     closeList;      // same size of map, true: occuipied
+    OpenList              openList;       // heap based
+    std::vector<double>   occupiedProb;   // contains prob of the node
+    std::vector<MapNode*> mapNodes;       // map nodes in the map
+    unsigned int          width;
+    unsigned int          height;
 };
 
 std::ostream& operator << (std::ostream& out, const Map& map) {
@@ -499,7 +601,7 @@ std::ostream& operator << (std::ostream& out, const Map& map) {
             if (botIdx == idx) {
                 out << "****" << " | ";
             } else {
-                out << map.map[idx] << " | ";
+                out << map.at(c, r)->getOccupiedProb() << " | ";
             }
         }
         out << std::endl;

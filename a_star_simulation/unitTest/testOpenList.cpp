@@ -1,24 +1,11 @@
 //  Copyright 2019 Tsung-Han lee
 #include "../include/a_star.h"
 
-std::vector<MapNode> getAvailableAdjacents(MapNode* const n, const MapNode& dest) {
-    auto canidates = n->getAdjacents();
-    /* check possibility */
-    for (auto itr = canidates.begin(); itr != canidates.end(); ) {
-        if (itr->getX() < 0 || itr->getY() < 0) {
-            itr = canidates.erase(itr);
-        } else {
-            itr->updateCosts(dest);
-            ++itr;
-        }
-    }
-
-    return canidates;
-}
 
 int main(int argc, char* argv[]) {
     MapNode dest(5, 5);
     MapNode src(2, 2);
+/*
     src.updateCosts(dest);
 
     OpenList list;
@@ -71,7 +58,7 @@ int main(int argc, char* argv[]) {
         std::cout << static_cast<Node>(point) << " -> ";
     }
 
-
+*/
 /*
     std::cout << "-------------------------\n";
     MapNode newnode = canidates[7];

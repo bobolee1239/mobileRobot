@@ -24,9 +24,10 @@ int main(int argc, char* argv[]) {
 */
     /* Testing Map */
     /* case 1 easy map */
+    int map_size = 100;
     std::vector<int8_t> rawMap;
-    for (int i=0; i<10; ++i) {
-        for (int j=0; j<10; ++j) {
+    for (int i=0; i<map_size; ++i) {
+        for (int j=0; j<map_size; ++j) {
             if ((i == 7) && (j == 2)) {
                 rawMap.push_back(100);
             } else if ((i == 2) && (j == 5)) {
@@ -37,27 +38,55 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout << "rawMap size: " << rawMap.size() << std::endl;
-    Map myMap(rawMap, 10, 10);
+    Map myMap(rawMap, map_size, map_size);
+
+
+    /**
+     **  ---------- CASE 1 -----------
+     **/
+    std::cout << "\n---------- CASE 1 ----------\n" << std::endl;
+
     auto path = myMap.moveRobotTo(2, 2).aStar(MapNode(3, 3));
     for (auto&& node : path) {
         std::cout << static_cast<Node>(node) << " -> ";
     }
     std::cout << std::endl;
 
-    auto p = path[0].parent;
-    std::cout << path[0] << std::endl;
-    std::cout << "parent" << *p << std::endl;
 
     // std::cout << myMap.getRobot() << std::endl;
-    std::cout << myMap << std::endl;
+    // std::cout << myMap << std::endl;
     auto closeList = myMap.getCloseList();
     std::cout << closeList.size() << std::endl;
-    for (int i = 10; i >= 0; --i) {
-        for (int j = 0; j < 10; ++j) {
-            std::cout << closeList[i*10 + j] << " | ";
+    /*
+    for (int i = map_size; i >= 0; --i) {
+        for (int j = 0; j < map_size; ++j) {
+            std::cout << closeList[i*map_size + j] << " | ";
         }
         std::cout << std::endl;
     }
+    */
+
+    /**
+     **  ---------- CASE 2 -----------
+     **/
+    std::cout << "\n---------- CASE 2 ----------\n" << std::endl;
+
+    path = myMap.moveRobotTo(2, 2).aStar(MapNode(90, 90));
+    for (auto&& node : path) {
+        std::cout << static_cast<Node>(node) << " -> ";
+    }
+    std::cout << std::endl;
+    // std::cout << myMap << std::endl;
+    closeList = myMap.getCloseList();
+    std::cout << closeList.size() << std::endl;
+    /*
+    for (int i = map_size; i >= 0; --i) {
+        for (int j = 0; j < map_size; ++j) {
+            std::cout << closeList[i*map_size + j] << " | ";
+        }
+        std::cout << std::endl;
+    }
+    */
 
     return 0;
 }
