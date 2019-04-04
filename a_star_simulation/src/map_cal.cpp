@@ -1,6 +1,7 @@
 //  Copyright 2019 Tsung-Han Lee
 #include <string.h>
 #include <math.h>
+#include <fstream>
 #include "ros/ros.h"
 #include "nav_msgs/OccupancyGrid.h"
 
@@ -34,7 +35,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void MapRawCallback(const nav_msgs::OccupancyGrid& msg) {
+void mapRawCallback(const nav_msgs::OccupancyGrid& msg) {
     map.header.frame_id           = "map";
     map.header.stamp              = ros::Time::now();
     map.info.width                = msg.info.width;

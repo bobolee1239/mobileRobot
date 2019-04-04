@@ -3,7 +3,7 @@ project(a_star_simulation)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
-include_directories(include/);
+include_directories(include/)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -202,3 +202,6 @@ include_directories(
 
 add_executable(map_cal src/map_cal.cpp)
 target_link_libraries(map_cal ${catkin_LIBRARIES})
+
+add_executable(tf_pub src/tf_pubTA.cpp)
+target_link_libraries(tf_pub ${catkin_LIBRARIES})

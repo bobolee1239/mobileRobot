@@ -1,29 +1,10 @@
 //  Copyright 2019 Tsung-Han lee
 #include <iomanip>
+#include <fstream>
 #include "../include/a_star.h"
-
+#include "readcsv.h"
 
 int main(int argc, char* argv[]) {
-/*
-    std::vector<int8_t> rawMap({100, 50, 0, -1, 20});
-
-    auto print_int8 = [](int8_t& e){std::cout << (short)e << std::endl;};
-    auto print_double = [](double& e){std::cout << e << std::endl;};
-
-    std::for_each(rawMap.begin(), rawMap.end(), print_int8);
-
-    std::vector<double> map;
-    std::for_each(rawMap.begin(), rawMap.end(), [&map](int8_t& e){
-        if (e > 0) {
-            map.push_back((double)e / MAP_OCCUPIED);
-        } else {
-            map.push_back(e);
-        }
-    });
-    std::for_each(map.begin(), map.end(), print_double);
-*/
-    /* Testing Map */
-    /* case 1 easy map */
     int map_size = 100;
     std::vector<int8_t> rawMap;
     for (int i=0; i<map_size; ++i) {
@@ -88,5 +69,29 @@ int main(int argc, char* argv[]) {
     }
     */
 
+    /**
+     **  ---------- CASE 3 -----------
+     **/
+    std::cout << "\n---------- CASE 3 ----------\n" << std::endl;
+    std::vector<int8_t> rawLabMap = readMap("/home/tea_lab/catkin_ws/src/a_star_simulation/assets/map.csv");
+    Map labMap(rawLabMap, 100, 100);
+
+    path = labMap.moveRobotTo(3, 2).aStar(Node(3, 4));
+    for (auto&& node : path) {
+        std::cout << static_cast<Node>(node) << " -> ";
+    }
+    std::cout << std::endl;
+
+    path = labMap.moveRobotTo(3, 4).aStar(Node(3, 10));
+    for (auto&& node : path) {
+        std::cout << static_cast<Node>(node) << " -> ";
+    }
+    std::cout << std::endl;
+
+    path = labMap.moveRobotTo(3, 10).aStar(Node(9, 4));
+    for (auto&& node : path) {
+        std::cout << static_cast<Node>(node) << " -> ";
+    }
+    std::cout << std::endl;
     return 0;
 }
