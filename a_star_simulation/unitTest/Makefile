@@ -12,7 +12,7 @@ testOpenList: testOpenList.cpp $(INCLUDES)
 testRobot: testRobot.cpp $(INCLUDES)
 	g++ $(FLAG) testRobot.cpp -o testRobot
 
-testMap: testMap.cpp $(INCLUDES)
+testMap: testMap.cpp $(INCLUDES) readcsv.h
 	g++ $(FLAG) testMap.cpp -o testMap
 
 clean :

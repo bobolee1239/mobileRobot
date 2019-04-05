@@ -4,6 +4,8 @@
 #include "../include/a_star.h"
 #include "readcsv.h"
 
+#define MAP_PATH "../assets/map.csv"
+
 int main(int argc, char* argv[]) {
     int map_size = 100;
     std::vector<int8_t> rawMap;
@@ -20,7 +22,6 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "rawMap size: " << rawMap.size() << std::endl;
     Map myMap(rawMap, map_size, map_size);
-
 
     /**
      **  ---------- CASE 1 -----------
@@ -73,7 +74,7 @@ int main(int argc, char* argv[]) {
      **  ---------- CASE 3 -----------
      **/
     std::cout << "\n---------- CASE 3 ----------\n" << std::endl;
-    std::vector<int8_t> rawLabMap = readMap("/home/tea_lab/catkin_ws/src/a_star_simulation/assets/map.csv");
+    std::vector<int8_t> rawLabMap = readMap(MAP_PATH);
     Map labMap(rawLabMap, 100, 100);
 
     path = labMap.moveRobotTo(3, 2).aStar(Node(3, 4));

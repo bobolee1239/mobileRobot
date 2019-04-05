@@ -2,3 +2,7 @@ testMap
 testOpenList
 testMapNode
 testRobot
+testMap.dSYM/
+testOpenList.dSYM/
+testMapNode.dSYM/
+testRobot.dSYM/
