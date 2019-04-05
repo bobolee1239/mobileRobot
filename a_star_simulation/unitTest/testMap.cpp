@@ -7,68 +7,63 @@
 #define MAP_PATH "../assets/map.csv"
 
 int main(int argc, char* argv[]) {
-    int map_size = 100;
+    int map_size = 10;
     std::vector<int8_t> rawMap;
-    for (int i=0; i<map_size; ++i) {
-        for (int j=0; j<map_size; ++j) {
-            if ((i == 7) && (j == 2)) {
+    for (int i = 0; i < map_size; ++i) {
+        for (int j = 0; j < map_size; ++j) {
+            if ((j == 4) && (i > 2 && i < 8)) {
                 rawMap.push_back(100);
-            } else if ((i == 2) && (j == 5)) {
+            } else if ((i <= 3) && (j == 5)) {
                 rawMap.push_back(100);
             } else {
                 rawMap.push_back(0);
             }
         }
     }
-    std::cout << "rawMap size: " << rawMap.size() << std::endl;
     Map myMap(rawMap, map_size, map_size);
+    std::cout << "rawMap size: " << rawMap.size() << std::endl;
+    std::cout << myMap << std::endl;
 
     /**
      **  ---------- CASE 1 -----------
      **/
     std::cout << "\n---------- CASE 1 ----------\n" << std::endl;
 
-    auto path = myMap.moveRobotTo(2, 2).aStar(MapNode(3, 3));
+    auto path = myMap.moveRobotTo(1, 1).aStar(MapNode(6, 5));
     for (auto&& node : path) {
         std::cout << static_cast<Node>(node) << " -> ";
     }
     std::cout << std::endl;
 
-
-    // std::cout << myMap.getRobot() << std::endl;
-    // std::cout << myMap << std::endl;
+    std::cout << myMap << std::endl;
     auto closeList = myMap.getCloseList();
-    std::cout << closeList.size() << std::endl;
-    /*
-    for (int i = map_size; i >= 0; --i) {
+    for (int i = map_size - 1; i >= 0; --i) {
         for (int j = 0; j < map_size; ++j) {
             std::cout << closeList[i*map_size + j] << " | ";
         }
         std::cout << std::endl;
     }
-    */
 
     /**
      **  ---------- CASE 2 -----------
      **/
     std::cout << "\n---------- CASE 2 ----------\n" << std::endl;
 
-    path = myMap.moveRobotTo(2, 2).aStar(MapNode(90, 90));
+    path = myMap.moveRobotTo(4, 2).aStar(MapNode(6, 5));
     for (auto&& node : path) {
         std::cout << static_cast<Node>(node) << " -> ";
     }
     std::cout << std::endl;
-    // std::cout << myMap << std::endl;
+
+    std::cout << myMap << std::endl;
     closeList = myMap.getCloseList();
-    std::cout << closeList.size() << std::endl;
-    /*
-    for (int i = map_size; i >= 0; --i) {
+    for (int i = map_size - 1; i >= 0; --i) {
         for (int j = 0; j < map_size; ++j) {
             std::cout << closeList[i*map_size + j] << " | ";
         }
         std::cout << std::endl;
     }
-    */
+
 
     /**
      **  ---------- CASE 3 -----------
