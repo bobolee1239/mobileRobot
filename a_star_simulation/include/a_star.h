@@ -117,13 +117,14 @@ class MapNode : public Node {
     MapNode& computeCostsNSetParent(MapNode* src, const Node& dest) {
         /* compute g cost */
         gCost  = src->gCost;
-        gCost += ((abs(_x - src->_x) + abs(_y - src->_y)) > 1) ? 1.4 : 1;
+        gCost += (((abs(_x - src->_x) + abs(_y - src->_y)) > 1) ? 1.4 : 1);
         /* compute h cost */
         hCost  = abs(_x - dest.getX()) + abs(_y - dest.getY());
         /* compute f cost */
         fCost  = gCost + hCost;
         /* set parent */
         parent = src;
+
         return *this;
     }
     bool reComputeCostsNChangeParent(MapNode* src, const Node& dest) {
@@ -341,6 +342,7 @@ std::ostream& operator << (std::ostream& out, const Robot& robot) {
 class Map {
  public:
     friend std::ostream& operator << (std::ostream& out, const Map& map);
+
     explicit Map(std::vector<int8_t> rawMap, unsigned int width, unsigned int height) {
         this->width  = width;
         this->height = height;
@@ -402,7 +404,7 @@ class Map {
          **/
         closeList.clear();
         std::for_each(mapNodes.begin(), mapNodes.end(), [this](MapNode* e){
-            if (e >= 0) {
+            if (e->occupiedProb >= 0) {
                 closeList.push_back(e->occupiedProb > 0.5);
             } else {
                 closeList.push_back(true);
@@ -415,39 +417,71 @@ class Map {
     }
 
     MapNode* at(int x, int y) const {
+        /* check bounded and throw error */
+        if (isOuttaMap(x, y)) {
+            throw("Outta the bound of map!");
+        }
         return mapNodes[x + y*width];
     }
 
     MapNode* at(const Node& n) {
+        /* check bounded and throw error */
+        if (isOuttaMap(n)) {
+            throw("Outta the bound of map!");
+        }
         return mapNodes[n.getX() + n.getY()*width];
     }
 
     Robot getRobot() const {return mobileBot;}
 
     Map& moveRobotTo(const int x, const int y) {
+        /* check bounded and throw error */
+        if (isOuttaMap(x, y)) {
+            throw("[Move Failed] Outta the bound of map!");
+        }
         mobileBot.moveTo(x, y);
         return *this;
     }
 
     double isOccupiedAt(int x, int y) const {
+        /* check bounded and throw error */
+        if (isOuttaMap(x, y)) {
+            throw("[Check Occupied Failed] Outta the bound of map!");
+        }
         return mapNodes[x + y*width]->occupiedProb > 0.9;
     }
 
     double isOccupiedAt(const Node* const n) const {
+        /* check bounded and throw error */
+        if (isOuttaMap(n)) {
+            throw("[Check Occupied Failed] Outta the bound of map!");
+        }
         return mapNodes[n->getX() + (n->getY())*width]->occupiedProb > 0.9;
     }
 
     bool isOuttaMap(const Node* const n) const {
-        return ((n->getX() < 0) || (n->getX() > width)
-                    || (n->getY() < 0) || (n->getY() > height));
+        /* TODO... Update the bounded */
+        return ((n->getX() < 0) || (n->getX() > width - 1)
+                    || (n->getY() < 0) || (n->getY() > height - 1));
+    }
+
+    bool isOuttaMap(const Node& n) const {
+        /* TODO... Update the bounded */
+        return ((n.getX() < 0) || (n.getX() > width - 1)
+                    || (n.getY() < 0) || (n.getY() > height - 1));
     }
 
     bool isOuttaMap(int x, int y) const {
-        return ((x < 0) || (x > width)
-                    || (y < 0) || (y > height));
+        /* TODO... Update the bounded */
+        return ((x < 0) || (x > width - 1)
+                    || (y < 0) || (y > height - 1));
     }
 
     bool inCloseList(const Node* const n) const {
+        /* check bounded and throw error */
+        if (isOuttaMap(n)) {
+            throw("[Check In Close List Failed] Outta the bound of map!");
+        }
         /* transform 2D info th 1D info */
         return closeList[n->getX() + n->getY()*width];
     }
@@ -469,26 +503,54 @@ class Map {
      **     3. updateCost of the mapNode if it is available
      **************************************************************/
     std::vector<MapNode*> getAvailableAdjacents(const MapNode* const n) {
-        /* find all adjacent nodes */
+        /* find all adjacent nodes in the map */
         std::vector<MapNode*> adjacents;
+/* DEBUG sake
+        std::cout << "(" << n->_x + 1 << ", " << n->_y + 1 << ")\n"
+                  << "(" << n->_x + 1 << ", " << n->_y - 1 << ")\n"
+                  << "(" << n->_x - 1 << ", " << n->_y + 1 << ")\n"
+                  << "(" << n->_x - 1 << ", " << n->_y - 1 << ")\n"
+                  << "(" << n->_x + 1 << ", " << n->_y + 0 << ")\n"
+                  << "(" << n->_x + 1 << ", " << n->_y + 0 << ")\n"
+                  << "(" << n->_x + 0 << ", " << n->_y + 1 << ")\n"
+                  << "(" << n->_x + 0 << ", " << n->_y + 1 << ")\n"
+                  << std::endl;
+*/
+
         //  horizontal
-        adjacents.push_back(this->at(n->_x + 1, n->_y));
-        adjacents.push_back(this->at(n->_x - 1, n->_y));
-        adjacents.push_back(this->at(n->_x    , n->_y + 1));
-        adjacents.push_back(this->at(n->_x    , n->_y - 1));
+        if (!isOuttaMap(n->_x + 1, n->_y)) {
+            adjacents.push_back(this->at(n->_x + 1, n->_y));
+        }
+        if (!isOuttaMap(n->_x - 1, n->_y)) {
+            adjacents.push_back(this->at(n->_x - 1, n->_y));
+        }
+        if (!isOuttaMap(n->_x    , n->_y + 1)) {
+            adjacents.push_back(this->at(n->_x    , n->_y + 1));
+        }
+        if (!isOuttaMap(n->_x    , n->_y - 1)) {
+            adjacents.push_back(this->at(n->_x    , n->_y - 1));
+        }
 
         //  diagonal
-        adjacents.push_back(this->at(n->_x + 1, n->_y + 1));
-        adjacents.push_back(this->at(n->_x + 1, n->_y - 1));
-        adjacents.push_back(this->at(n->_x - 1, n->_y + 1));
-        adjacents.push_back(this->at(n->_x - 1, n->_y - 1));
+        if (!isOuttaMap(n->_x + 1, n->_y + 1)) {
+            adjacents.push_back(this->at(n->_x + 1, n->_y + 1));
+        }
+        if (!isOuttaMap(n->_x + 1, n->_y - 1)) {
+            adjacents.push_back(this->at(n->_x + 1, n->_y - 1));
+        }
+        if (!isOuttaMap(n->_x - 1, n->_y + 1)) {
+            adjacents.push_back(this->at(n->_x - 1, n->_y + 1));
+        }
+        if (!isOuttaMap(n->_x - 1, n->_y - 1)) {
+            adjacents.push_back(this->at(n->_x - 1, n->_y - 1));
+        }
 
         for (auto itr = adjacents.begin(); itr != adjacents.end(); ) {
-            /**************************************
-             **  1. Check it's inside the map
+            /*********************************************
+             **  1. Check it's not occupied by obstacle
              **  2. Check not in close list
-             **************************************/
-            if (isOuttaMap(*itr) || inCloseList(*itr) || isOccupiedAt(*itr)) {
+             *********************************************/
+            if (inCloseList(*itr) || isOccupiedAt(*itr)) {
                 //  not available
                 itr = adjacents.erase(itr);
             } else {
@@ -501,11 +563,9 @@ class Map {
 
 
     std::vector<MapNode> aStar(const Node& dest) {
-#ifdef DEBUG
-        std::cout << "========== A* BEGIN ========== " << std::endl;
-#endif
         /* clear closeList before calling A* algorithm */
         reset();
+
         /* if path is empty => no path exists */
         std::vector<MapNode> path;
         /************************************************
@@ -514,6 +574,9 @@ class Map {
         openList.pushNode(this->at(mobileBot.getPosition()));
 
         MapNode* walkTo;
+#ifdef DEBUG
+        std::cout << "========== A* BEGIN ========== " << std::endl;
+#endif
         while (!openList.empty()) {
         /************************************************
          ** 2. Find the lowest F cost in open list and
@@ -555,7 +618,7 @@ class Map {
                     if (tmpNodeInOpenList->reComputeCostsNChangeParent(walkTo, dest)) {
 #ifdef DEBUG
                         std::cout << "\t[MODIFIED] "
-                                  << tmpNodeInOpenList << std::endl;
+                                  << *tmpNodeInOpenList << std::endl;
 #endif
                         openList.reHeap();
                     }
