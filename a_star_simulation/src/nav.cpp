@@ -15,7 +15,7 @@
 
 // [TODO] ... adjusting the control gain !! ...
 const double k_rho      = 2.0;
-const double k_alpha    = 5.0;
+const double k_alpha    = -5.0;
 
 /************************************************
  **  Global variables to allow communication
@@ -99,8 +99,8 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
         headingAngleDiff += 2*PI;
     }
 
-    linear_vel = k_rho    * distance;
-    angular_vel = k_alpha * headingAngleDiff;
+    double linear_vel  = k_rho    * distance;
+    double angular_vel = k_alpha * headingAngleDiff;
 
     /**
      ** 1. Saturating linear velocity

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <iostream>
 #include "ros/ros.h"
+#include "ros/console.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/Point.h"
@@ -18,20 +19,29 @@
 
 void buildMap(const nav_msgs::OccupancyGrid& map);
 void updatePose(const nav_msgs::Odometry& pose);
-Node& coordTranslation(Node& curPos);
 
+/**********************************************************************
+ ** GLOBAL SCOPE VARIABLE : to be accessed in callback fcn
+ ***********************************************************************/
+double th_now = 0.0;
+Node goal(3.0, 4.0);
+/* Pointer to our Map */
+Map* myMap = NULL;         //  to be initialized in callback function
+/***********************************************************************/
 
 int main(int argc, char* argv[]) {
+    /**
+     ** Initializing the ROS nh : "a_star"
+     **/
+    ros::init(argc, argv, "a_star");
     ros::NodeHandle nh;
 
-    ros::Publisher  pubSubgoal = nh.advertis<geometry_msgs::Point>(SUBGOAL_TOPIC, 1);
+    ros::Publisher  pubSubgoal = nh.advertise<geometry_msgs::Point>(SUBGOAL_TOPIC, 1);
     ros::Subscriber subPose    = nh.subscribe(POSE_TOPIC, 10, &updatePose);
     ros::Subscriber subMap     = nh.subscribe(MAP_TOPIC, 10, &buildMap);
 
-    geometry_msgs::Point subgoal(0.0, 0.0, 0.0);
-
-    /* Map and something */
-    Map* myMap = NULL;         //  to be initialized in callback function
+    /* to be published to topic */
+    geometry_msgs::Point subgoal;
 
     /* looping in 10 Hz */
     ros::Rate rate(10);
@@ -40,8 +50,27 @@ int main(int argc, char* argv[]) {
         /* receive callback fcn */
         ros::spinOnce();
 
-        /* publish message to topic */
+        if (myMap == NULL) continue;
 
+        ROS_DEBUG_STREAM("Find path from "
+                        << myMap->dac(*static_cast<Node*>(
+                            myMap->at(myMap->getRobot().getPosition())))
+                        << " -> " << goal);
+        auto path = myMap->aStar(goal);
+
+        std::cout << "Found path: ";
+        for (auto&& node : path) {
+            std::cout << static_cast<Node>(node) << " -> ";
+        }
+        std::cout << std::endl;
+
+        if (path.empty()) {
+            continue;
+        } else {
+            subgoal.x = path.front().getX();
+            subgoal.y = path.front().getY();
+        }
+        pubSubgoal.publish(subgoal);
 
         rate.sleep();
     }
@@ -55,22 +84,22 @@ int main(int argc, char* argv[]) {
 void buildMap(const nav_msgs::OccupancyGrid& map) {
     if (myMap) {
         /* update our map for the following circumstance */
-        myMap.updateMap(map);
+        myMap->updateMap(map);
     } else {
         /* build our map for the very first time */
+        ROS_DEBUG("Build map & move robot ...");
         myMap = new Map(map);
+        myMap->moveRobotTo(-4.0, -4.0);
+        ROS_DEBUG("Build map done");
     }
 }
 
 /**
- **  Update the vehicle pose 
+ **  Update the vehicle pose
  **/
-void updatePose(const nav_msgs::Odometry& pose) {
-}
-
-/**
- **  Transform the objective target to our map coordinate
- **/
-Node& coordTranslation(Node& curPos) {
-
+void updatePose(const nav_msgs::Odometry& loc) {
+    if (myMap == NULL) return;
+    myMap->moveRobotTo(loc.pose.pose.position.x, loc.pose.pose.position.y);
+    ROS_INFO_STREAM("cur pos:" << myMap->dac(*static_cast<Node*>(
+        myMap->at(myMap->getRobot().getPosition()))));
 }

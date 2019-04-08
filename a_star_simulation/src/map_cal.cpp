@@ -40,6 +40,7 @@ void mapRawCallback(const nav_msgs::OccupancyGrid& msg) {
     map.header.stamp              = ros::Time::now();
     map.info.width                = msg.info.width;
     map.info.height               = msg.info.height;
+    map.info.resolution           = msg.info.resolution;
     map.info.origin.position.x    = msg.info.origin.position.x;
     map.info.origin.position.y    = msg.info.origin.position.y;
     map.info.origin.position.z    = msg.info.origin.position.z;

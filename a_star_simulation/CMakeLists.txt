@@ -200,8 +200,14 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(map_cal src/map_cal.cpp)
+add_executable(map_cal src/map_calTA.cpp)
 target_link_libraries(map_cal ${catkin_LIBRARIES})
 
 add_executable(tf_pub src/tf_pubTA.cpp)
 target_link_libraries(tf_pub ${catkin_LIBRARIES})
+
+add_executable(map_astar src/map_astar.cpp)
+target_link_libraries(map_astar ${catkin_LIBRARIES})
+
+add_executable(nav src/nav.cpp)
+target_link_libraries(nav ${catkin_LIBRARIES})

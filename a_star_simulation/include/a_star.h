@@ -555,6 +555,13 @@ class Map {
      **  Analog to Digital Convetor
      **/
     Node adc(const Node& n) {
+        /*
+        std::cout << "resolution: " << this->resolution << std::endl
+                  << "node x: " << n.getX() << std::endl
+                  << "node y: " << n.getY() << std::endl
+                  << "map origin x: " << originX << std::endl
+                  << "map origin y: " << originY << std::endl;
+        */
         return Node(static_cast<int>((n.getX() - originX) / resolution),
                     static_cast<int>((n.getY() - originY) / resolution));
     }
