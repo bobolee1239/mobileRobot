@@ -15,18 +15,19 @@
 #include <functional>
 #include <string>
 #include <iomanip>
+#include "nav_msgs/OccupancyGrid.h"
 
 #define MAP_OCCUPIED 100.0
 /**********************************************************************
- ** Node to represent a node in space
+ ** Digital Node to represent a node in space
  **********************************************************************/
 class Node {
  public:
     friend std::ostream& operator << (std::ostream& out, const Node& n);
     friend bool operator == (const Node& lhs, const Node& rhs);
 
-    Node(int x, int y) : _x(x), _y(y) {}
     Node(const Node& node) : _x(node._x), _y(node._y) {}
+    Node(int x, int y) : _x(x), _y(y) {}
     Node()  : _x(0), _y(0) {}
 
     int getX() const {return _x;}
@@ -343,9 +344,39 @@ class Map {
  public:
     friend std::ostream& operator << (std::ostream& out, const Map& map);
 
+    explicit Map(const nav_msgs::OccupancyGrid& rawMap) {
+        this->width      = rawMap.info.width;
+        this->height     = rawMap.info.height;
+        this->resolution = rawMap.info.resolution;
+        this->originX    = rawMap.info.origin.position.x;
+        this->originY    = rawMap.info.origin.position.y;
+
+        /* build up map and close list */
+        int8_t e;
+        for (int i=0, j=rawMap.data.size(); i < j; ++i) {
+            e = rawMap.data[i];
+            if (e < 0) {
+                /* unknown node -> we cannot go there */
+                mapNodes.push_back(new MapNode(i%width, i/width, e));
+                closeList.push_back(true);
+            } else {
+                double prob = static_cast<double>(e) / MAP_OCCUPIED;
+                mapNodes.push_back(new MapNode(i%width, i/width, prob));
+                /***************************************************
+                 ** Bot cannot move to somewhere with 0.5 prob that
+                 ** was occupied.
+                 ***************************************************/
+                closeList.push_back(prob > 0.5);
+            }
+        }
+    }
+
     explicit Map(std::vector<int8_t> rawMap, unsigned int width, unsigned int height) {
-        this->width  = width;
-        this->height = height;
+        this->width      = width;
+        this->height     = height;
+        this->resolution = 1.0;
+        this->originX    = 0.0;
+        this->originY    = 0.0;
         /* build up map and close list */
         int8_t e;
         for (int i=0, j=rawMap.size(); i < j; ++i) {
@@ -373,26 +404,32 @@ class Map {
     }
 
     /* In case we'll update the map */
-    Map& updateMap(std::vector<int8_t> rawMap) {
-        /* clear whole map and rebuild */
-        this->~Map();
+    Map& updateMap(const nav_msgs::OccupancyGrid& rawMap) {
+        int8_t e;
+        for (int i=0, j=rawMap.data.size(); i < j; ++i) {
+            e = rawMap.data[i];
+            if (e < 0) {
+                /* unknown node -> we cannot go there */
+                mapNodes[i]->occupiedProb = e;
+            } else {
+                mapNodes[i]->occupiedProb = static_cast<double>(e) / MAP_OCCUPIED;
+            }
+        }
+        reset();
+        return *this;
+    }
+    Map& updateMap(const std::vector<int8_t> rawMap) {
         int8_t e;
         for (int i=0, j=rawMap.size(); i < j; ++i) {
             e = rawMap[i];
             if (e < 0) {
                 /* unknown node -> we cannot go there */
-                mapNodes.push_back(new MapNode(i%width, i/width, e));
-                closeList.push_back(true);
+                mapNodes[i]->occupiedProb = e;
             } else {
-                double prob = static_cast<double>(e) / MAP_OCCUPIED;
-                mapNodes.push_back(new MapNode(i%width, i/width, prob));
-                /***************************************************
-                 ** Bot cannot move to somewhere with 0.5 prob that
-                 ** was occupied.
-                 ***************************************************/
-                closeList.push_back(prob > 0.5);
+                mapNodes[i]->occupiedProb = static_cast<double>(e) / MAP_OCCUPIED;
             }
         }
+        reset();
         return *this;
     }
 
@@ -419,7 +456,7 @@ class Map {
     MapNode* at(int x, int y) const {
         /* check bounded and throw error */
         if (isOuttaMap(x, y)) {
-            throw("Outta the bound of map!");
+            throw "Outta the bound of map!";
         }
         return mapNodes[x + y*width];
     }
@@ -427,7 +464,7 @@ class Map {
     MapNode* at(const Node& n) {
         /* check bounded and throw error */
         if (isOuttaMap(n)) {
-            throw("Outta the bound of map!");
+            throw "Outta the bound of map!";
         }
         return mapNodes[n.getX() + n.getY()*width];
     }
@@ -437,7 +474,7 @@ class Map {
     Map& moveRobotTo(const int x, const int y) {
         /* check bounded and throw error */
         if (isOuttaMap(x, y)) {
-            throw("[Move Failed] Outta the bound of map!");
+            throw "[Move Failed] Outta the bound of map!";
         }
         mobileBot.moveTo(x, y);
         return *this;
@@ -446,7 +483,7 @@ class Map {
     double isOccupiedAt(int x, int y) const {
         /* check bounded and throw error */
         if (isOuttaMap(x, y)) {
-            throw("[Check Occupied Failed] Outta the bound of map!");
+            throw "[Check Occupied Failed] Outta the bound of map!";
         }
         return mapNodes[x + y*width]->occupiedProb > 0.9;
     }
@@ -454,7 +491,7 @@ class Map {
     double isOccupiedAt(const Node* const n) const {
         /* check bounded and throw error */
         if (isOuttaMap(n)) {
-            throw("[Check Occupied Failed] Outta the bound of map!");
+            throw "[Check Occupied Failed] Outta the bound of map!";
         }
         return mapNodes[n->getX() + (n->getY())*width]->occupiedProb > 0.9;
     }
@@ -480,7 +517,7 @@ class Map {
     bool inCloseList(const Node* const n) const {
         /* check bounded and throw error */
         if (isOuttaMap(n)) {
-            throw("[Check In Close List Failed] Outta the bound of map!");
+            throw "[Check In Close List Failed] Outta the bound of map!";
         }
         /* transform 2D info th 1D info */
         return closeList[n->getX() + n->getY()*width];
@@ -495,6 +532,24 @@ class Map {
     std::vector<bool> getCloseList() const { return closeList; }
     OpenList getOpenList() const { return openList; }
     std::vector<MapNode*> getMap() const { return mapNodes; }
+
+    std::vector<Node> dac(const std::vector<MapNode> digitalNodes) {
+        std::vector<Node> realPath;
+        for (auto&& dn : digitalNodes) {
+            realPath.push_back(Node(originX + dn.getX() * resolution,
+                                    originY + dn.getY() * resolution));
+        }
+        return realPath;
+    }
+    Node dac(const Node& digitalNode) {
+        return Node(originX + digitalNode.getX() * resolution,
+                    originY + digitalNode.getY() * resolution);
+    }
+
+    Node adc(const Node& n) {
+        return Node(static_cast<int>((n.getX() - originX / resolution)),
+                    static_cast<int>((n.getY() - originY / resolution)));
+    }
 
     /**************************************************************
      ** DESCRIPTION:
@@ -562,12 +617,16 @@ class Map {
     }
 
 
-    std::vector<MapNode> aStar(const Node& dest) {
+    std::vector<Node> aStar(const Node& realDest) {
         /* clear closeList before calling A* algorithm */
         reset();
 
-        /* if path is empty => no path exists */
-        std::vector<MapNode> path;
+        /**
+         ** [Digitalize the destination]
+         ** find the closest node to the real destination
+         **/
+        Node dest = adc(realDest);
+
         /************************************************
          **  1. Add the staring position in open list.
          ************************************************/
@@ -593,7 +652,7 @@ class Map {
 #ifdef DEBUG
                 std::cout << "========== A* END ========== " << std::endl;
 #endif
-                return walkTo->getPath();
+                return dac(walkTo->getPath());
             }
             /*  add walked node to close list. */
             closeList[walkTo->getX() + walkTo->getY() * width] = true;
@@ -639,17 +698,21 @@ class Map {
                     std::cout << std::endl;
 #endif
         }
-        return path;
+        /* if path is empty => no path exists */
+        return std::vector<Node>();
     }
 
  private:
-    Robot                 mobileBot;
+    Robot                 mobileBot;      // vehichle in the map
     std::vector<bool>     closeList;      // same size of map, true: occuipied
     OpenList              openList;       // heap based
     std::vector<double>   occupiedProb;   // contains prob of the node
     std::vector<MapNode*> mapNodes;       // map nodes in the map
-    unsigned int          width;
-    unsigned int          height;
+    unsigned int          width;          // # of sampling in width
+    unsigned int          height;         // # of sampling in height
+    double                resolution;     // samping space (Unit: meter)
+    double                originX;        // origin of the map
+    double                originY;        // origin of the map
 };
 
 std::ostream& operator << (std::ostream& out, const Map& map) {

@@ -1,6 +1,6 @@
 all: testMapNode testOpenList testRobot testMap
 
-FLAG = -std=c++11 -DDEBUG -g
+FLAG = -std=c++11 -DDEBUG -g -I /opt/ros/kinetic/include/
 INCLUDES = ../include/a_star.h
 
 testMapNode: testMapNode.cpp $(INCLUDES)

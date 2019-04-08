@@ -18,6 +18,7 @@
 
 void buildMap(const nav_msgs::OccupancyGrid& map);
 void updatePose(const nav_msgs::Odometry& pose);
+Node& coordTranslation(Node& curPos);
 
 
 int main(int argc, char* argv[]) {
@@ -29,6 +30,8 @@ int main(int argc, char* argv[]) {
 
     geometry_msgs::Point subgoal(0.0, 0.0, 0.0);
 
+    /* Map and something */
+    Map* myMap = NULL;         //  to be initialized in callback function
 
     /* looping in 10 Hz */
     ros::Rate rate(10);
@@ -46,8 +49,28 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+/**
+ **  Build & Update our map
+ **/
 void buildMap(const nav_msgs::OccupancyGrid& map) {
+    if (myMap) {
+        /* update our map for the following circumstance */
+        myMap.updateMap(map);
+    } else {
+        /* build our map for the very first time */
+        myMap = new Map(map);
+    }
 }
 
+/**
+ **  Update the vehicle pose 
+ **/
 void updatePose(const nav_msgs::Odometry& pose) {
+}
+
+/**
+ **  Transform the objective target to our map coordinate
+ **/
+Node& coordTranslation(Node& curPos) {
+
 }
