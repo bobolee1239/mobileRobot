@@ -19,7 +19,7 @@
 
 #define MAP_OCCUPIED 100.0
 /**********************************************************************
- ** Digital Node to represent a node in space
+ ** Analog Node to represent a node in space
  **********************************************************************/
 class Node {
  public:
@@ -27,25 +27,25 @@ class Node {
     friend bool operator == (const Node& lhs, const Node& rhs);
 
     Node(const Node& node) : _x(node._x), _y(node._y) {}
-    Node(int x, int y) : _x(x), _y(y) {}
+    Node(double x, double y) : _x(x), _y(y) {}
     Node()  : _x(0), _y(0) {}
 
-    int getX() const {return _x;}
-    int getY() const {return _y;}
-    Node& walk(const int xDiff, const int yDiff) {
+    double getX() const {return _x;}
+    double getY() const {return _y;}
+    Node& walk(const double xDiff, const double yDiff) {
         _x += xDiff;
         _y += yDiff;
         return *this;
     }
-    Node& moveTo(const int x, const int y) {
+    Node& moveTo(const double x, const double y) {
         _x = x;
         _y = y;
         return *this;
     }
 
  protected:
-    int _x;
-    int _y;
+    double _x;
+    double _y;
 };
 
 std::ostream& operator << (std::ostream& out, const Node& n) {
@@ -58,7 +58,8 @@ bool operator == (const Node& lhs, const Node& rhs) {
 }
 
 /**********************************************************************
- ** MapNode to represent a node in map
+ ** - MapNode to represent a node in map
+ ** - Digital Node to represent a node in space
  **********************************************************************/
 
 class MapNode : public Node {
@@ -312,12 +313,12 @@ class Robot {
         position = pos;
     }
 
-    Robot& walk(const int xDiff, const int yDiff) {
+    Robot& walk(const double xDiff, const double yDiff) {
         position.walk(xDiff, yDiff);
         return *this;
     }
 
-    Robot& moveTo(const int x, const int y) {
+    Robot& moveTo(const double x, const double y) {
         position.moveTo(x, y);
         return *this;
     }
@@ -471,12 +472,13 @@ class Map {
 
     Robot getRobot() const {return mobileBot;}
 
-    Map& moveRobotTo(const int x, const int y) {
+    Map& moveRobotTo(const double x, const double y) {
+        Node dest = adc(Node(x, y));
         /* check bounded and throw error */
-        if (isOuttaMap(x, y)) {
+        if (isOuttaMap(dest)) {
             throw "[Move Failed] Outta the bound of map!";
         }
-        mobileBot.moveTo(x, y);
+        mobileBot.moveTo(dest.getX(), dest.getY());
         return *this;
     }
 
@@ -533,6 +535,9 @@ class Map {
     OpenList getOpenList() const { return openList; }
     std::vector<MapNode*> getMap() const { return mapNodes; }
 
+    /**
+     **  Digital to Analog Convetor
+     **/
     std::vector<Node> dac(const std::vector<MapNode> digitalNodes) {
         std::vector<Node> realPath;
         for (auto&& dn : digitalNodes) {
@@ -546,9 +551,23 @@ class Map {
                     originY + digitalNode.getY() * resolution);
     }
 
+    /**
+     **  Analog to Digital Convetor
+     **/
     Node adc(const Node& n) {
-        return Node(static_cast<int>((n.getX() - originX / resolution)),
-                    static_cast<int>((n.getY() - originY / resolution)));
+        return Node(static_cast<int>((n.getX() - originX) / resolution),
+                    static_cast<int>((n.getY() - originY) / resolution));
+    }
+
+    Map& setOrigin(double x, double y) {
+        this->originX = x;
+        this->originY = y;
+        return *this;
+    }
+
+    Map& setResolution(double res) {
+        this->resolution = res;
+        return *this;
     }
 
     /**************************************************************

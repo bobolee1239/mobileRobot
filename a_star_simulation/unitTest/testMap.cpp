@@ -49,7 +49,10 @@ int main(int argc, char* argv[]) {
      **/
     std::cout << "\n---------- CASE 2 ----------\n" << std::endl;
 
-    path = myMap.moveRobotTo(4, 2).aStar(MapNode(6, 5));
+    myMap.setResolution(0.1);
+    myMap.setOrigin(-0.5, -0.5);
+    path = myMap.moveRobotTo(-0.1, -0.3).aStar(Node(0.1, 0));
+    // path = myMap.moveRobotTo(4, 2).aStar(MapNode(6, 5));
     for (auto&& node : path) {
         std::cout << static_cast<Node>(node) << " -> ";
     }
