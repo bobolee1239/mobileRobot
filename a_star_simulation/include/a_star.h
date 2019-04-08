@@ -8,6 +8,7 @@
 #ifndef _A_STAR_
 #define _A_STAR_
 
+#include <math.h>
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
@@ -32,6 +33,7 @@ class Node {
 
     double getX() const {return _x;}
     double getY() const {return _y;}
+
     Node& walk(const double xDiff, const double yDiff) {
         _x += xDiff;
         _y += yDiff;
@@ -41,6 +43,12 @@ class Node {
         _x = x;
         _y = y;
         return *this;
+    }
+    double distanceTo(const Node& other) {
+        return sqrt(pow(_x - other._x, 2) + pow(_y - other._y, 2));
+    }
+    double distanceTo(const double x, const double y) {
+        return sqrt(pow(_x - x, 2) + pow(_y - y, 2));
     }
 
  protected:
@@ -325,11 +333,15 @@ class Robot {
 
     Node getPosition() const {return position;}
     std::string getName() const {return name;}
+    double getWidth() const {return width;}
+
+    Robot& setWidth(double w) {width = w;}
 
 
 
  private:
     std::string name;
+    double width;           // unit: meter
     Node position;
 };
 
@@ -351,6 +363,7 @@ class Map {
         this->resolution = rawMap.info.resolution;
         this->originX    = rawMap.info.origin.position.x;
         this->originY    = rawMap.info.origin.position.y;
+        mobileBot.setWidth(0.46);
 
         /* build up map and close list */
         int8_t e;
@@ -378,6 +391,7 @@ class Map {
         this->resolution = 1.0;
         this->originX    = 0.0;
         this->originY    = 0.0;
+        mobileBot.setWidth(1);
         /* build up map and close list */
         int8_t e;
         for (int i=0, j=rawMap.size(); i < j; ++i) {
@@ -487,6 +501,45 @@ class Map {
         if (isOuttaMap(x, y)) {
             throw "[Check Occupied Failed] Outta the bound of map!";
         }
+        /* check if occupied by the robot volume */
+        int gap = static_cast<int>(mobileBot.getWidth() / resolution);
+        /* check 1. horizontally and 2. vertically */
+        /*
+        if (!isOuttaMap(x + gap, y)) {
+            if (mapNodes[x + gap + y*width]->occupiedProb > 0.9) return true;
+        }
+        if (!isOuttaMap(x - gap, y)) {
+            if (mapNodes[x - gap + y*width]->occupiedProb > 0.9) return true;
+        }
+        if (!isOuttaMap(x, y + gap)) {
+            if (mapNodes[x + (y + gap)*width]->occupiedProb > 0.9) return true;
+        }
+        if (!isOuttaMap(x, y - gap)) {
+            if (mapNodes[x + (y - gap)*width]->occupiedProb > 0.9) return true;
+        }
+        */
+        /* 3. diagonally */
+        if (!isOuttaMap(x + gap, y + gap)) {
+            if (mapNodes[x + gap + (y + gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+        if (!isOuttaMap(x - gap, y + gap)) {
+            if (mapNodes[x - gap + (y + gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+        if (!isOuttaMap(x + gap, y - gap)) {
+            if (mapNodes[x + gap + (y - gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+        if (!isOuttaMap(x - gap, y - gap)) {
+            if (mapNodes[x - gap + (y - gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+
         return mapNodes[x + y*width]->occupiedProb > 0.9;
     }
 
@@ -495,6 +548,47 @@ class Map {
         if (isOuttaMap(n)) {
             throw "[Check Occupied Failed] Outta the bound of map!";
         }
+        /* check if occupied by the robot volume */
+        int x = n->getX();
+        int y = n->getY();
+        int gap = static_cast<int>(mobileBot.getWidth() / resolution);
+        /* check 1. horizontally and 2. vertically */
+        /*
+        if (!isOuttaMap(x + gap, y)) {
+            if (mapNodes[x + gap + y*width]->occupiedProb > 0.9) return true;
+        }
+        if (!isOuttaMap(x - gap, y)) {
+            if (mapNodes[x - gap + y*width]->occupiedProb > 0.9) return true;
+        }
+        if (!isOuttaMap(x, y + gap)) {
+            if (mapNodes[x + (y + gap)*width]->occupiedProb > 0.9) return true;
+        }
+        if (!isOuttaMap(x, y - gap)) {
+            if (mapNodes[x + (y - gap)*width]->occupiedProb > 0.9) return true;
+        }
+        */
+        /* 3. diagonally */
+        if (!isOuttaMap(x + gap, y + gap)) {
+            if (mapNodes[x + gap + (y + gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+        if (!isOuttaMap(x - gap, y + gap)) {
+            if (mapNodes[x - gap + (y + gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+        if (!isOuttaMap(x + gap, y - gap)) {
+            if (mapNodes[x + gap + (y - gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+        if (!isOuttaMap(x - gap, y - gap)) {
+            if (mapNodes[x - gap + (y - gap)*width]->occupiedProb > 0.9) {
+                return true;
+            }
+        }
+
         return mapNodes[n->getX() + (n->getY())*width]->occupiedProb > 0.9;
     }
 
@@ -555,15 +649,8 @@ class Map {
      **  Analog to Digital Convetor
      **/
     Node adc(const Node& n) {
-        /*
-        std::cout << "resolution: " << this->resolution << std::endl
-                  << "node x: " << n.getX() << std::endl
-                  << "node y: " << n.getY() << std::endl
-                  << "map origin x: " << originX << std::endl
-                  << "map origin y: " << originY << std::endl;
-        */
-        return Node(static_cast<int>((n.getX() - originX) / resolution),
-                    static_cast<int>((n.getY() - originY) / resolution));
+        return Node(static_cast<int>(round((n.getX() - originX) / resolution)),
+                    static_cast<int>(round((n.getY() - originY) / resolution)));
     }
 
     Map& setOrigin(double x, double y) {

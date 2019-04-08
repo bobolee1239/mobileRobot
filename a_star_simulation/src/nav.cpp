@@ -7,6 +7,7 @@
  ***************************************************************/
 #include <math.h>
 #include "ros/ros.h"
+#include "ros/console.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Twist.h"
 #include "nav_msgs/Odometry.h"
@@ -14,8 +15,8 @@
 #define PI 3.14159265358979323      // circumference ratio.
 
 // [TODO] ... adjusting the control gain !! ...
-const double k_rho      = 2.0;
-const double k_alpha    = -5.0;
+const double k_rho      = 1.0;
+const double k_alpha    = 2.60;
 
 /************************************************
  **  Global variables to allow communication
@@ -84,6 +85,7 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      *********************************************/
     double xDiff = static_cast<double>(msg.x - x_now);
     double yDiff = static_cast<double>(msg.y - y_now);
+
     /**
      **  Euclidean distance between robot and target
      **/
@@ -95,7 +97,7 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
     /* wrapping the angle between -PI ~ PI */
     if (headingAngleDiff > PI) {
         headingAngleDiff -= 2*PI;
-    } else if (headingAngleDiff < PI) {
+    } else if (headingAngleDiff < -PI) {
         headingAngleDiff += 2*PI;
     }
 
@@ -124,11 +126,22 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
     } else {
         command.angular.z = angular_vel;
     }
+
+    std::cout << "-----------------------------------\n";
+    ROS_INFO_STREAM("[NAV] x_now: " << x_now);
+    ROS_INFO_STREAM("[NAV] y_now: " << y_now);
+    ROS_INFO_STREAM("[NAV] th_now: " << th_now/PI*180.0);
+    ROS_INFO_STREAM("[NAV] xDiff: " << xDiff);
+    ROS_INFO_STREAM("[NAV] yDiff: " << yDiff);
+    ROS_INFO_STREAM("[NAV] distance: " << distance);
+    ROS_INFO_STREAM("[NAV] heading angle diff: " << headingAngleDiff/PI*180.0);
+    ROS_INFO_STREAM("[NAV] linear_vel: " << linear_vel);
+    ROS_INFO_STREAM("[NAV] angular_vel: " << angular_vel);
 }
 
-void poseCallback(const nav_msgs::Odometry &location) {
+void poseCallback(const nav_msgs::Odometry &loc) {
     //  Update robot position
-    x_now = location.pose.pose.position.x;
-    y_now = location.pose.pose.position.y;
-    th_now = location.pose.pose.orientation.z;
+    x_now  = loc.pose.pose.position.x;
+    y_now  = loc.pose.pose.position.y;
+    th_now = loc.pose.pose.orientation.z;
 }
