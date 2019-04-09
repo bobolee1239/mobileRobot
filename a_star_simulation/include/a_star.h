@@ -628,6 +628,7 @@ class Map {
     std::vector<bool> getCloseList() const { return closeList; }
     OpenList getOpenList() const { return openList; }
     std::vector<MapNode*> getMap() const { return mapNodes; }
+    double getResolution() const { return resolution; }
 
     /**
      **  Digital to Analog Convetor

@@ -4,6 +4,8 @@
  ** DESCRIPTION :
  **     - Algorithms to find the shortest path
  **********************************************************/
+#include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include <iostream>
 #include "ros/ros.h"
@@ -29,12 +31,14 @@ double th_now = 0.0;
 std::vector<Node> goals({Node(3.0, 4.0),
                          Node(3.0, -2.0),
                          Node(-4.0, -3.0),
-                         Node(-3.0, -3.0)});
+                         Node(-3.0, -3.0),
+                         Node(-3.0, 3.0)});
 /* Pointer to our Map */
 Map* myMap = NULL;         //  to be initialized in callback function
 /***********************************************************************/
 
 int main(int argc, char* argv[]) {
+    srand(time(NULL));
     /**
      ** Initializing the ROS nh : "a_star"
      **/
@@ -58,8 +62,8 @@ int main(int argc, char* argv[]) {
         if (myMap == NULL) continue;
         if (goals.empty()) {
             ROS_INFO_STREAM("[ASTAR] Jobs Done !!");
-            continue;
         }
+
         ROS_DEBUG_STREAM("Find path from "
                         << myMap->dac(*static_cast<Node*>(
                             myMap->at(myMap->getRobot().getPosition())))
@@ -73,13 +77,21 @@ int main(int argc, char* argv[]) {
         std::cout << std::endl;
 
         if (path.empty()) {
-            continue;
-        } else if (path.size() > 3) {
+            ROS_INFO_STREAM("[ASTAR] RANDOM WALK FOR NO PATH FOUND !!");
+            subgoal.x = myMap->getRobot().getPosition().getX() +
+                        rand() / RAND_MAX * myMap->getResolution();
+            subgoal.y = myMap->getRobot().getPosition().getY() +
+                        rand() / RAND_MAX * myMap->getResolution();
+        } else if (path.size() > 2) {
             subgoal.x = path[2].getX();
             subgoal.y = path[2].getY();
+        } else if (path.size() == 2) {
+            subgoal.x = path[1].getX();
+            subgoal.y = path[1].getY();
         } else {
-            subgoal.x = path.front().getX();
-            subgoal.y = path.front().getY();
+            /* we're now at the goal */
+            subgoal.x = myMap->getRobot().getPosition().getX();
+            subgoal.y = myMap->getRobot().getPosition().getY();
         }
         pubSubgoal.publish(subgoal);
         ROS_INFO_STREAM("[ASTAR] subgoal:("
@@ -112,7 +124,7 @@ void updatePose(const nav_msgs::Odometry& loc) {
     ROS_INFO_STREAM("[ASTAR] pos:" << myMap->dac(*static_cast<Node*>(
         myMap->at(myMap->getRobot().getPosition()))));
     if ((!goals.empty()) &&
-        (goals[0].distanceTo(loc.pose.pose.position.x, loc.pose.pose.position.y) < 0.5)) {
+        (goals[0].distanceTo(loc.pose.pose.position.x, loc.pose.pose.position.y) < 0.2)) {
             ROS_INFO_STREAM("[ASTAR]Next Goal");
             goals.erase(goals.begin());
     }
