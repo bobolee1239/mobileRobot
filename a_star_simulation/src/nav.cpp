@@ -126,6 +126,14 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
     } else {
         command.angular.z = angular_vel;
     }
+    /**
+     **  Handle when close to goal
+     **     => in 1 mm
+     **/
+    if (distance < 0.15) {
+        command.angular.z = 0.0;
+        command.linear.x  = 0.0;
+    }
 
     std::cout << "-----------------------------------\n";
     ROS_INFO_STREAM("[NAV] x_now: " << x_now);

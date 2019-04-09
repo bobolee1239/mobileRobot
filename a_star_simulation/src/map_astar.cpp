@@ -18,6 +18,7 @@
 #define POSE_TOPIC     "/robot_pose"
 #define MAP_TOPIC      "/map"
 #define SUBGOAL_TOPIC  "/subgoal_position"
+#define VEHICLE_WIDTH  0.46
 
 void buildMap(const nav_msgs::OccupancyGrid& map);
 void updatePose(const nav_msgs::Odometry& pose);
@@ -64,17 +65,19 @@ int main(int argc, char* argv[]) {
             ROS_INFO_STREAM("[ASTAR] Jobs Done !!");
         }
 
-        ROS_DEBUG_STREAM("Find path from "
+        ROS_DEBUG_STREAM("[ASTAR] Finding path from "
                         << myMap->dac(*static_cast<Node*>(
                             myMap->at(myMap->getRobot().getPosition())))
                         << " -> " << goals.front());
         auto path = myMap->aStar(goals.front());
 
+        /*
         std::cout << "Found path: ";
         for (auto&& node : path) {
             std::cout << static_cast<Node>(node) << " -> ";
         }
         std::cout << std::endl;
+        */
 
         if (path.empty()) {
             ROS_INFO_STREAM("[ASTAR] RANDOM WALK FOR NO PATH FOUND !!");
@@ -111,7 +114,7 @@ void buildMap(const nav_msgs::OccupancyGrid& map) {
         myMap->updateMap(map);
     } else {
         /* build our map for the very first time */
-        myMap = new Map(map);
+        myMap = new Map(map, VEHICLE_WIDTH);
     }
 }
 
@@ -121,8 +124,10 @@ void buildMap(const nav_msgs::OccupancyGrid& map) {
 void updatePose(const nav_msgs::Odometry& loc) {
     if (myMap == NULL) return;
     myMap->moveRobotTo(loc.pose.pose.position.x, loc.pose.pose.position.y);
+    /*
     ROS_INFO_STREAM("[ASTAR] pos:" << myMap->dac(*static_cast<Node*>(
-        myMap->at(myMap->getRobot().getPosition()))));
+                    myMap->at(myMap->getRobot().getPosition()))));
+    */
     if ((!goals.empty()) &&
         (goals[0].distanceTo(loc.pose.pose.position.x, loc.pose.pose.position.y) < 0.2)) {
             ROS_INFO_STREAM("[ASTAR]Next Goal");

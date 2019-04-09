@@ -357,13 +357,13 @@ class Map {
  public:
     friend std::ostream& operator << (std::ostream& out, const Map& map);
 
-    explicit Map(const nav_msgs::OccupancyGrid& rawMap) {
+    explicit Map(const nav_msgs::OccupancyGrid& rawMap, double vehicleWidth) {
         this->width      = rawMap.info.width;
         this->height     = rawMap.info.height;
         this->resolution = rawMap.info.resolution;
         this->originX    = rawMap.info.origin.position.x;
         this->originY    = rawMap.info.origin.position.y;
-        mobileBot.setWidth(0.46);
+        mobileBot.setWidth(vehicleWidth);
 
         /* build up map and close list */
         int8_t e;
