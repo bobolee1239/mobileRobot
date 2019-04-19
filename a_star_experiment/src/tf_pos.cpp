@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
         }
 
         /**
-         ** --- Create quaternion from yaw for 6DOF odometry ---
+         ** --- Create quaternion with yaw from 6DOF odometry ---
          **     1. fill in transform information
          **     2. publish the transform over tf
          ** ----------------------------------------------------
