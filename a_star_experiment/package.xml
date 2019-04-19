@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>a_star_simulation</name>
+  <name>a_star_experiment</name>
   <version>0.0.0</version>
-  <description>The a_star_simulation package</description>
+  <description>The a_star_experiment package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="bobolee1239@gmail.com">Tsung-Han Brian Lee</maintainer>
+  <maintainer email="bobolee1239@gmail.com">Tsung-Han Lee</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/a_star_simulation</url> -->
+  <!-- <url type="website">http://wiki.ros.org/a_star_experiment</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
