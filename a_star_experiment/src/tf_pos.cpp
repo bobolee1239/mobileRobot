@@ -67,12 +67,12 @@ int main(int argc, char* argv[]) {
         }
 
         /**
-         ** --- Create quaternion with yaw from 6DOF odometry ---
+         ** --- Create quaternion from yaw from 6DOF odometry ---
          **     1. fill in transform information
          **     2. publish the transform over tf
          ** ----------------------------------------------------
          **/
-        Quaternion odom_quat = tf::createQuaternionMsgFromYaw(robot_pos.th);
+        // Quaternion odom_quat = tf::createQuaternionMsgFromYaw(robot_pos.th);
 
         geometry_msgs::TransformStamped odom_trans;
         odom_trans.header.stamp     = curTime;

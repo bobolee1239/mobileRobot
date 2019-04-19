@@ -334,15 +334,16 @@ class Robot {
     Node getPosition() const {return position;}
     std::string getName() const {return name;}
     double getWidth() const {return width;}
+    double getPose() const {return pose;}
 
     Robot& setWidth(double w) {width = w;}
-
-
+    Robot& setPose(double p) {pose = p;}
 
  private:
     std::string name;
     double width;           // unit: meter
     Node position;
+    double pose;
 };
 
 std::ostream& operator << (std::ostream& out, const Robot& robot) {
