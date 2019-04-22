@@ -1,4 +1,4 @@
-//  Copyright (c) 2019 Tommy Huang, Tsung-Han Brian Lee
+//  Copyright 2019 Tommy Huang, Tsung-Han Brian Lee
 /***************************************************************
  ** ---------------- Mobile Vehicle Control -------------------
  **   AUTHOR      : Tommy Huang, Tsung-Han Brian Lee
@@ -17,7 +17,6 @@
 // [TODO] ... adjusting the control gain !! ...
 const double k_rho      = 1.0;
 const double k_alpha    = 2.60;
-const double k_beta     = 1.0;
 
 /************************************************
  **  Global variables to allow communication
@@ -86,7 +85,6 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      *********************************************/
     double xDiff = static_cast<double>(msg.x - x_now);
     double yDiff = static_cast<double>(msg.y - y_now);
-    double pDiff = static_cast<double>(msg.z);          //  pose angle diff
 
     /**
      **  Euclidean distance between robot and target
@@ -105,11 +103,6 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
 
     double linear_vel  = k_rho    * distance;
     double angular_vel = k_alpha * headingAngleDiff;
-
-    /* if the pose angle is setup */
-    if (pDiff - 87 > 0.001) {
-        angular_vel += k_beta * pDiff;
-    }
 
     /**
      ** 1. Saturating linear velocity

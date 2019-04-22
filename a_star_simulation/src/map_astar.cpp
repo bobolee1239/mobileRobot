@@ -13,12 +13,13 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/Point.h"
-#include "a_star.h"
+#include "a-star.h"
 
 #define POSE_TOPIC     "/robot_pose"
 #define MAP_TOPIC      "/map"
 #define SUBGOAL_TOPIC  "/subgoal_position"
-#define VEHICLE_WIDTH  0.46
+#define VEHICLE_WIDTH  0.46                     //  Unit: meter
+#define PI             3.14159265358979323
 
 void buildMap(const nav_msgs::OccupancyGrid& map);
 void updatePose(const nav_msgs::Odometry& pose);
@@ -39,7 +40,8 @@ Map* myMap = NULL;         //  to be initialized in callback function
 /***********************************************************************/
 
 int main(int argc, char* argv[]) {
-    srand(time(NULL));
+    /* random random seed */
+    unsigned int seed = time(NULL);
     /**
      ** Initializing the ROS nh : "a_star"
      **/
@@ -78,24 +80,35 @@ int main(int argc, char* argv[]) {
         }
         std::cout << std::endl;
         */
-
         if (path.empty()) {
-            ROS_INFO_STREAM("[ASTAR] RANDOM WALK FOR NO PATH FOUND !!");
-            subgoal.x = myMap->getRobot().getPosition().getX() +
-                        rand() / RAND_MAX * myMap->getResolution();
-            subgoal.y = myMap->getRobot().getPosition().getY() +
-                        rand() / RAND_MAX * myMap->getResolution();
-        } else if (path.size() > 2) {
+            ROS_INFO_STREAM("[ASTAR]: RANDOM WALK FOR NO PATH FOUND!");
+            subgoal.x = myMap->getRobot().getPosition().getX()
+                        + static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
+            subgoal.y = myMap->getRobot().getPosition().getY()
+                        + static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
+            subgoal.z = 87;
+        } else if (path.size() > 5) {
             subgoal.x = path[2].getX();
             subgoal.y = path[2].getY();
-        } else if (path.size() == 2) {
-            subgoal.x = path[1].getX();
-            subgoal.y = path[1].getY();
+            subgoal.z = 87;
+        } else if (path.size() > 2 && path.size() <= 5) {
+            ROS_INFO_STREAM("[ASTAR]: WE ARE NOW CONTROL DESIRED POSE!");
+            subgoal.x = path[2].getX();
+            subgoal.y = path[2].getY();
+            subgoal.z = PI - myMap->getRobot().getPose();
+            /* limit z in the range -PI ~ PI */
+            if (subgoal.z > PI) {
+                subgoal.z -= 2*PI;
+            } else if (subgoal.z < -PI) {
+                subgoal.z += 2*PI;
+            }
         } else {
-            /* we're now at the goal */
+            /* we're now in the goal */
             subgoal.x = myMap->getRobot().getPosition().getX();
             subgoal.y = myMap->getRobot().getPosition().getY();
+            subgoal.z = 87;
         }
+
         pubSubgoal.publish(subgoal);
         ROS_INFO_STREAM("[ASTAR] subgoal:("
                         << subgoal.x << ","<< subgoal.y << ")");
@@ -124,6 +137,8 @@ void buildMap(const nav_msgs::OccupancyGrid& map) {
 void updatePose(const nav_msgs::Odometry& loc) {
     if (myMap == NULL) return;
     myMap->moveRobotTo(loc.pose.pose.position.x, loc.pose.pose.position.y);
+    /* update pose */
+    myMap->getRobot().setPose(loc.pose.pose.orientation.z);
     /*
     ROS_INFO_STREAM("[ASTAR] pos:" << myMap->dac(*static_cast<Node*>(
                     myMap->at(myMap->getRobot().getPosition()))));

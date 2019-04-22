@@ -16,7 +16,7 @@
 #include "tf/tf.h"                      //  Coord Transform
 #include "a-star.h"                     //  My A* algo Library
 /*--------------------------------------------------------------------*/
-#define PI 3.14159265358979323;
+#define PI              3.14159265358979323
 #define VEHICLE_WIDTH   0.46            // Unit: meter
 
 /* define topic name as following */
@@ -120,6 +120,7 @@ int main(int argc, char* argv[]) {
             /* we're now in the goal */
             subgoal.x = myMap->getRobot().getPosition().getX();
             subgoal.y = myMap->getRobot().getPosition().getY();
+            subgoal.z = 87;
         }
 
         pubSubgoal.publish(subgoal);
