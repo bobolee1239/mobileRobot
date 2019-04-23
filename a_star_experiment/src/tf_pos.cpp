@@ -56,9 +56,9 @@ int main(int argc, char* argv[]) {
 
         double timeFly = (curTime - prevTime).toSec();
 
-        robot_pos.x   = (vehicle_vel.x * cos(robot_pos.th)
+        robot_pos.x  += (vehicle_vel.x * cos(robot_pos.th)
                          - vehicle_vel.y * sin(robot_pos.th)) * timeFly;
-        robot_pos.y   = (vehicle_vel.x * sin(robot_pos.th)
+        robot_pos.y  += (vehicle_vel.x * sin(robot_pos.th)
                          + vehicle_vel.y * cos(robot_pos.th)) * timeFly;
         robot_pos.th += vehicle_vel.th * timeFly;
 
