@@ -11,6 +11,8 @@
 #include "geometry_msgs/Twist.h"
 #include "nav_msgs/Odometry.h"
 
+#define PI              3.14159265358979323
+
 /******************************************
  **     Help Fcn & Structure
  ******************************************/
@@ -34,7 +36,7 @@ volatile PlanarInfo vehicle_vel;
 
 int main(int argc, char* argv[]) {
     /* Init ROS node : odemetry_pub */
-    ros::init(argc, argv. "odometry_pub");
+    ros::init(argc, argv, "odometry_pub");
 
     ros::NodeHandle nh;
     tf::TransformBroadcaster odom_broadcaster;
@@ -52,7 +54,7 @@ int main(int argc, char* argv[]) {
         ros::spinOnce();            //  be able to handle callback fcn
         curTime = ros::Time::now();
 
-        double timeFly = curTime - prevTime;
+        double timeFly = (curTime - prevTime).toSec();
 
         robot_pos.x   = (vehicle_vel.x * cos(robot_pos.th)
                          - vehicle_vel.y * sin(robot_pos.th)) * timeFly;
@@ -63,7 +65,7 @@ int main(int argc, char* argv[]) {
         if (robot_pos.th >= 2*PI) {
             robot_pos.th -= 2*PI;
         } else if (robot_pos.th < 0) {
-            robot_pos += 2*PI;
+            robot_pos.th += 2*PI;
         }
 
         /**
@@ -72,7 +74,7 @@ int main(int argc, char* argv[]) {
          **     2. publish the transform over tf
          ** ----------------------------------------------------
          **/
-        // Quaternion odom_quat = tf::createQuaternionMsgFromYaw(robot_pos.th);
+        Quaternion odom_quat = tf::createQuaternionMsgFromYaw(robot_pos.th);
 
         geometry_msgs::TransformStamped odom_trans;
         odom_trans.header.stamp     = curTime;
@@ -82,7 +84,7 @@ int main(int argc, char* argv[]) {
         odom_trans.transform.translation.x = robot_pos.x;
         odom_trans.transform.translation.y = robot_pos.y;
         odom_trans.transform.translation.z = 0.0;
-        odom_trans.transform.rotation      = robot_pos.th;
+        odom_trans.transform.rotation      = odom_quat;
 
         odom_broadcaster.sendTransform(odom_trans);
 
@@ -91,7 +93,7 @@ int main(int argc, char* argv[]) {
          **  1. Fill in position & velocity info
          **  2. Publish to topic
          **/
-        Odomery odom;
+        Odometry odom;
 
         odom.header.stamp     = curTime;
         odom.header.frame_id  = "map";
@@ -100,7 +102,7 @@ int main(int argc, char* argv[]) {
         odom.pose.pose.position.x    = robot_pos.x;
         odom.pose.pose.position.y    = robot_pos.y;
         odom.pose.pose.position.z    = 0.0;
-        odom.pose.pose.orientation.z = th;
+        odom.pose.pose.orientation.z = robot_pos.th;
 
         odom.twist.twist.linear.x  = vehicle_vel.x;
         odom.twist.twist.linear.y  = vehicle_vel.y;
@@ -109,7 +111,7 @@ int main(int argc, char* argv[]) {
         odom_pub.publish(odom);
 
         prevTime = curTime;
-        r.sleep();
+        loopRate.sleep();
     }
 
     return 0;

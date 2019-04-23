@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     ros::init(argc, argv, "Navigator");
 
     /* Setup ROS Verbosity Level */
-    if (ros::console::set_logger_lever(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
+    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
         ros::console::notifyLoggerLevelsChanged();
     }
 
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     geometry_msgs::Point subgoal;       // to be published to SUBGOAL_TOPIC
     ros::Rate loopRate(100.0);          //  Unit: Hz
     while (ros::ok()) {
-        ros::spinOnce()                 // to be able to fire callback fcn
+        ros::spinOnce();                // to be able to fire callback fcn
 
         /* do nothing if myMap is not yet created */
         if (myMap == NULL)  continue;
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
         Node dest(goal.x, goal.y);
         ROS_DEBUG_STREAM("[Navigator]: Finding path from "
                           << myMap->dac(*static_cast<Node*>(
-                              myMap->at(myMap->getRobot().getPositoin())))
+                              myMap->at(myMap->getRobot().getPosition())))
                           << " -> " << dest);
         auto path = myMap->aStar(dest);
         /*

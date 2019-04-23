@@ -30,8 +30,8 @@ include_directories(
 #   src/${PROJECT_NAME}/a_star_simulation.cpp
 # )
 
-add_executable(map_cal src/map_calTA.cpp)
-target_link_libraries(map_cal ${catkin_LIBRARIES})
+add_executable(map_cal_sim src/map_calTA.cpp)
+target_link_libraries(map_cal_sim ${catkin_LIBRARIES})
 
 add_executable(tf_pub src/tf_pubTA.cpp)
 target_link_libraries(tf_pub ${catkin_LIBRARIES})
@@ -39,5 +39,5 @@ target_link_libraries(tf_pub ${catkin_LIBRARIES})
 add_executable(map_astar src/map_astar.cpp)
 target_link_libraries(map_astar ${catkin_LIBRARIES})
 
-add_executable(nav src/nav.cpp)
-target_link_libraries(nav ${catkin_LIBRARIES})
+add_executable(nav_sim src/nav.cpp)
+target_link_libraries(nav_sim ${catkin_LIBRARIES})
