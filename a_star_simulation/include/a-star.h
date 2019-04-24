@@ -16,6 +16,7 @@
 #include <functional>
 #include <string>
 #include <iomanip>
+#include <fstream>
 #include "nav_msgs/OccupancyGrid.h"
 
 #define MAP_OCCUPIED 100.0
@@ -731,7 +732,6 @@ class Map {
         return adjacents;
     }
 
-
     std::vector<Node> aStar(const Node& realDest) {
         /* clear closeList before calling A* algorithm */
         reset();
@@ -749,7 +749,12 @@ class Map {
 
         MapNode* walkTo;
 #ifdef DEBUG
+        std::fstream logger;
+        logger.open("~/catkin_ws/src/a_star_simulation/log/debug.log",
+                    std::ios::app);
+
         std::cout << "========== A* BEGIN ========== " << std::endl;
+        logger << "========== A* BEGIN ========== " << std::endl;
 #endif
         while (!openList.empty()) {
         /************************************************
@@ -760,12 +765,14 @@ class Map {
             walkTo = openList.popNode();
 #ifdef DEBUG
             std::cout << " - walk to " << *walkTo << std::endl;
+            logger << " - walk to " << *walkTo << std::endl;
 #endif
             /* return the path if it's the destination */
             if (*walkTo == dest) {
                 /* bottom up to get whole path */
 #ifdef DEBUG
                 std::cout << "========== A* END ========== " << std::endl;
+                logger.close();
 #endif
                 return dac(walkTo->getPath());
             }
@@ -793,6 +800,8 @@ class Map {
 #ifdef DEBUG
                         std::cout << "\t[MODIFIED] "
                                   << *tmpNodeInOpenList << std::endl;
+                        logger << "\t[MODIFIED] "
+                                  << *tmpNodeInOpenList << std::endl;
 #endif
                         openList.reHeap();
                     }
@@ -806,13 +815,19 @@ class Map {
                     openList.pushNode(nodePtr);
 #ifdef DEBUG
                     std::cout << "\t * Adding " << *nodePtr << std::endl;
+                    logger << "\t * Adding " << *nodePtr << std::endl;
 #endif
                 }
             }
 #ifdef DEBUG
                     std::cout << std::endl;
+                    logger << std::endl;
 #endif
         }
+#ifdef DEBUG
+        std::cout << "========== A* END ========== " << std::endl;
+        logger.close();
+#endif
         /* if path is empty => no path exists */
         return std::vector<Node>();
     }

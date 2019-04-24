@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(a_star_simulation)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++11 -DDEBUG)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -38,6 +38,9 @@ target_link_libraries(tf_pub ${catkin_LIBRARIES})
 
 add_executable(map_astar src/map_astar.cpp)
 target_link_libraries(map_astar ${catkin_LIBRARIES})
+
+add_executable(map_astar_lab5_sim src/map_astar_lab5_sim.cpp)
+target_link_libraries(map_astar_lab5_sim ${catkin_LIBRARIES})
 
 add_executable(nav_sim src/nav.cpp)
 target_link_libraries(nav_sim ${catkin_LIBRARIES})

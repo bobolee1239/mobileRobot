@@ -32,7 +32,7 @@ void handleSetVelocity(const Twist& msg);
  ** Global Variable :
  **   => To be caught in callback fcn
  ******************************************/
-volatile PlanarInfo vehicle_vel;
+volatile PlanarInfo vehicle_vel = {0.0, 0.0, 0.0};
 
 int main(int argc, char* argv[]) {
     /* Init ROS node : odemetry_pub */
@@ -45,10 +45,10 @@ int main(int argc, char* argv[]) {
     ros::Publisher  odom_pub = nh.advertise<Odometry>("/robot_pose", 50);
     ros::Subscriber sub = nh.subscribe("/feedback_Vel", 100, handleSetVelocity);
 
-    PlanarInfo robot_pos;                   //  record robot position
-    ros::Rate loopRate(100.0);              //  looping rate
-    ros::Time curTime;                      //  current Time step
-    ros::Time prevTime = ros::Time::now();  //  last Time step
+    PlanarInfo robot_pos = {0.0, 0.0, 0.0};   //  record robot position
+    ros::Rate loopRate(100.0);                //  looping rate
+    ros::Time curTime;                        //  current Time step
+    ros::Time prevTime = ros::Time::now();    //  last Time step
 
     while (ros::ok()) {
         ros::spinOnce();            //  be able to handle callback fcn
