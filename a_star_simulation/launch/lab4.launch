@@ -11,8 +11,8 @@
     <node pkg="a_star_simulation" name="map_cal" type="map_cal" />
     <node pkg="a_star_simulation" name="map_astar" type="map_astar" output="screen" />
     <node pkg="a_star_simulation" name="tf_pub" type="tf_pub" />
-    <!-- <node pkg="a_star_simulation" name="nav" type="nav" /> -->
+    <node pkg="a_star_simulation" name="nav_sim" type="nav_sim" />
 
     <!-- Rviz -->
-    <!-- <node pkg="rviz" name="rviz" type="rviz" /> -->
+    <node pkg="rviz" name="rviz" type="rviz" />
 </launch>

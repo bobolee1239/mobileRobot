@@ -20,7 +20,7 @@
 #define POSE_TOPIC     "/robot_pose"
 #define MAP_TOPIC      "/map"
 #define SUBGOAL_TOPIC  "/subgoal_position"
-#define VEHICLE_WIDTH  0.1                     //  Unit: meter
+#define VEHICLE_WIDTH  0.2                     //  Unit: meter
 #define PI             3.14159265358979323
 
 void buildMap(const nav_msgs::OccupancyGrid& map);
@@ -93,11 +93,11 @@ int main(int argc, char* argv[]) {
             subgoal.y = myMap->getRobot().getPosition().getY()
                         + static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
             subgoal.z = 87;
-        } else if (path.size() > 5) {
-            subgoal.x = path[2].getX();
-            subgoal.y = path[2].getY();
+        } else if (path.size() > 10) {
+            subgoal.x = path[4].getX();
+            subgoal.y = path[4].getY();
             subgoal.z = 87;
-        } else if (path.size() > 2 && path.size() <= 5) {
+        } else if (path.size() > 2) {
             ROS_INFO_STREAM("[ASTAR]: WE ARE NOW CONTROL DESIRED POSE!");
             subgoal.x = path[2].getX();
             subgoal.y = path[2].getY();

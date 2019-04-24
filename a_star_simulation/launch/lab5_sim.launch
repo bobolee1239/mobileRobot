@@ -10,7 +10,7 @@
     <!-- lab4 nodes -->
     <node pkg="a_star_simulation" name="map_cal" type="map_cal" />
     <node pkg="a_star_simulation" name="map_astar_lab5_sim" type="map_astar_lab5_sim" output="screen" />
-    <node pkg="a_star_experiment" name="tf_pos" type="tf_pos" />
+    <node pkg="a_star_simulation" name="tf_pos_sim" type="tf_pos_sim" />
     <node pkg="a_star_simulation" name="nav" type="nav" />
 
     <!-- Rviz -->

@@ -35,6 +35,10 @@ void subgoalCallback(const geometry_msgs::Point &msg);
 void poseCallback(const nav_msgs::Odometry &location);
 
 int main(int argc, char* argv[]) {
+    /* Setup ROS Verbosity Level */
+    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
+        ros::console::notifyLoggerLevelsChanged();
+    }
     /**
      ** Initializing the ROS nh : "nav"
      **/
@@ -137,12 +141,13 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      **  Handle when close to goal
      **     => in 1 mm
      **/
-    if (distance < 0.13) {
+    if (distance < 0.05) {
+        ROS_INFO_STREAM("\n[NAV] WE ARE CLOSE ENOUGH!\n");
         command.angular.z = 0.0;
         command.linear.x  = 0.0;
     }
 
-    std::cout << "-----------------------------------\n";
+    ROS_INFO_STREAM("-----------------------------------");
     ROS_INFO_STREAM("[NAV] x_now: " << x_now);
     ROS_INFO_STREAM("[NAV] y_now: " << y_now);
     ROS_INFO_STREAM("[NAV] th_now: " << th_now/PI*180.0);

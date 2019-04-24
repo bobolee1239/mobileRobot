@@ -17,7 +17,7 @@
 #include "a-star.h"                     //  My A* algo Library
 /*--------------------------------------------------------------------*/
 #define PI              3.14159265358979323
-#define VEHICLE_WIDTH   0.46            // Unit: meter
+#define VEHICLE_WIDTH   0.2             // Unit: meter
 
 /* define topic name as following */
 #define POSE_TOPIC      "/robot_pose"
@@ -102,9 +102,9 @@ int main(int argc, char* argv[]) {
             subgoal.y = myMap->getRobot().getPosition().getY()
                         + static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
             subgoal.z = 87;
-        } else if (path.size() > 5) {
-            subgoal.x = path[2].getX();
-            subgoal.y = path[2].getY();
+        } else if (path.size() > 10) {
+            subgoal.x = path[4].getX();
+            subgoal.y = path[4].getY();
             subgoal.z = 87;
         } else if (path.size() > 2) {
             subgoal.x = path[2].getX();

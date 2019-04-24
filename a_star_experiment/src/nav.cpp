@@ -137,7 +137,7 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      **  Handle when close to goal
      **     => in 1 mm
      **/
-    if (distance < 0.13) {
+    if (distance < 0.05) {
         command.angular.z = 0.0;
         command.linear.x  = 0.0;
     }
