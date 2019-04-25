@@ -15,9 +15,9 @@
 #define PI 3.14159265358979323      // circumference ratio.
 
 // [TODO] ... adjusting the control gain !! ...
-const double k_rho      = 1.0;
+const double k_rho      = 1.00;
 const double k_alpha    = 2.60;
-const double k_beta     = 1.0;
+const double k_beta     = 0.50;
 
 /************************************************
  **  Global variables to allow communication
@@ -86,7 +86,13 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      *********************************************/
     double xDiff = static_cast<double>(msg.x - x_now);
     double yDiff = static_cast<double>(msg.y - y_now);
-    double pDiff = static_cast<double>(msg.z);          //  pose angle diff
+    double pDiff = static_cast<double>(msg.z - th_now);     //  pose angle diff
+    //  Wrapping the pDiff in the range of -PI ~ PI
+    if (pDiff > PI) {
+      pDiff -= 2*PI;
+    } else if (pDiff < -PI) {
+      pDiff += 2*PI;
+    }
 
     /**
      **  Euclidean distance between robot and target
@@ -106,10 +112,12 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
     double linear_vel  = k_rho    * distance;
     double angular_vel = k_alpha * headingAngleDiff;
 
-    /* if the pose angle is setup */
+    /* [TODO] control beta if */
+    /*
     if (pDiff - 87 > 0.001) {
         angular_vel += k_beta * pDiff;
     }
+    */
 
     /**
      ** 1. Saturating linear velocity
@@ -137,8 +145,10 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      **  Handle when close to goal
      **     => in 1 mm
      **/
-    if (distance < 0.05) {
-        command.angular.z = 0.0;
+    if (distance < 0.06) {
+        ROS_INFO_STREAM("[NAV] WE ARE CLOSE ENOUGH!");
+        //  [TODO] it's just a temp way to control pose
+        command.angular.z = pDiff*k_beta;
         command.linear.x  = 0.0;
     }
 

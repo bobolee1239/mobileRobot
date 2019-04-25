@@ -18,6 +18,7 @@
 /*--------------------------------------------------------------------*/
 #define PI              3.14159265358979323
 #define VEHICLE_WIDTH   0.2             // Unit: meter
+#define RANDOM_STEP     4
 
 /* define topic name as following */
 #define POSE_TOPIC      "/robot_pose"
@@ -98,24 +99,18 @@ int main(int argc, char* argv[]) {
         if (path.empty()) {
             ROS_INFO_STREAM("[Navigator]: RANDOM WALK FOR NO PATH FOUND!");
             subgoal.x = myMap->getRobot().getPosition().getX()
-                        + static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
+                + RANDOM_STEP*static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
             subgoal.y = myMap->getRobot().getPosition().getY()
-                        + static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
+                + RANDOM_STEP*static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
             subgoal.z = 87;
-        } else if (path.size() > 10) {
-            subgoal.x = path[4].getX();
-            subgoal.y = path[4].getY();
+        } else if (path.size() > 6) {
+            subgoal.x = path[6].getX();
+            subgoal.y = path[6].getY();
             subgoal.z = 87;
-        } else if (path.size() > 2) {
-            subgoal.x = path[2].getX();
-            subgoal.y = path[2].getY();
-            subgoal.z = goal.th - myMap->getRobot().getPose();
-            /* limit z in the range -PI ~ PI */
-            if (subgoal.z > PI) {
-                subgoal.z -= 2*PI;
-            } else if (subgoal.z < -PI) {
-                subgoal.z += 2*PI;
-            }
+        } else if (path.size() > 1) {
+            subgoal.x = path.back().getX();
+            subgoal.y = path.back().getY();
+            subgoal.z = goal.th;
         } else {
             /* we're now in the goal */
             subgoal.x = myMap->getRobot().getPosition().getX();
@@ -127,6 +122,10 @@ int main(int argc, char* argv[]) {
 
         ROS_INFO_STREAM("[Navigator]: subgoal ("
                         << subgoal.x << "," << subgoal.y << ")");
+        ROS_INFO_STREAM("[Navigator]: goal ("
+                        << goal.x << "," << goal.y << ")"
+                        << " @ " << goal.th/PI*180.0);
+
 
         loopRate.sleep();
     }
@@ -154,7 +153,7 @@ void handleRecvGoal(const geometry_msgs::PoseStamped& msg) {
     goal.th = tf::getYaw(msg.pose.orientation);
 
     ROS_DEBUG_STREAM("[Navigator]: Goal (" << goal.x << ", " << goal.y << ") @"
-                     << goal.th);
+                     << goal.th/PI*180.0);
 }
 
 /**
