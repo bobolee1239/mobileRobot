@@ -7,7 +7,7 @@
 
 <node pkg="lab6" type="tf_subscribe" name="tf_subscribe"/>
 
-	<arg name="map_file" default="$(find lab6)/map/402_resize.yaml"/>
+	<arg name="map_file" default="/home/nvidia/Desktop/505.yaml"/>
 	<node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)">
 				<remap from="map" to="map_raw"/>
 	</node>	
