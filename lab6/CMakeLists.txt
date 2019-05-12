@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(lab6)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -117,7 +117,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include/
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -207,3 +207,9 @@ target_link_libraries(pose_subscribe ${catkin_LIBRARIES})
 
 add_executable(tf_subscribe src/tf_subscribe.cpp)
 target_link_libraries(tf_subscribe ${catkin_LIBRARIES})
+
+add_executable(lab6_Navigator src/lab6_Navigator.cpp)
+target_link_libraries(lab6_Navigator ${catkin_LIBRARIES})
+
+add_executable(lab6_nav src/lab6_nav.cpp)
+target_link_libraries(lab6_nav ${catkin_LIBRARIES})
