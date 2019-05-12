@@ -1,0 +1,18 @@
+<launch>
+    <!-- map file  -->
+    <arg name="map_file" default="$(find a_star_simulation)/map/505.yaml" />
+
+    <!-- map server (rename topic map -> map_raw) -->
+    <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)">
+        <remap from="map" to="map_raw" />
+    </node>
+
+    <!-- lab4 nodes -->
+    <node pkg="a_star_simulation" name="map_cal" type="map_cal" />
+    <node pkg="a_star_simulation" name="map_astar_lab5_sim" type="map_astar_lab5_sim" output="screen" />
+    <node pkg="a_star_simulation" name="tf_pos_sim" type="tf_pos_sim" />
+    <node pkg="a_star_simulation" name="nav" type="nav" />
+
+    <!-- Rviz -->
+    <node pkg="rviz" name="rviz" type="rviz" />
+</launch>

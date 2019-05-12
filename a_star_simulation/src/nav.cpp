@@ -90,7 +90,13 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      *********************************************/
     double xDiff = static_cast<double>(msg.x - x_now);
     double yDiff = static_cast<double>(msg.y - y_now);
-    double pDiff = static_cast<double>(msg.z);          //  pose angle diff
+    double pDiff = static_cast<double>(msg.z - th_now);     //  pose angle diff
+    //  Wrapping the pDiff in the range of -PI ~ PI
+    if (pDiff > PI) {
+      pDiff -= 2*PI;
+    } else if (pDiff < -PI) {
+      pDiff += 2*PI;
+    }
 
     /**
      **  Euclidean distance between robot and target
@@ -141,9 +147,9 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      **  Handle when close to goal
      **     => in 1 mm
      **/
-    if (distance < 0.05) {
+    if (distance < 0.06) {
         ROS_INFO_STREAM("\n[NAV] WE ARE CLOSE ENOUGH!\n");
-        command.angular.z = 0.0;
+        command.angular.z = pDiff*k_beta;
         command.linear.x  = 0.0;
     }
 

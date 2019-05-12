@@ -86,21 +86,14 @@ int main(int argc, char* argv[]) {
             subgoal.y = myMap->getRobot().getPosition().getY()
                         + static_cast<double>(rand_r(&seed)) / RAND_MAX * myMap->getResolution();
             subgoal.z = 87;
-        } else if (path.size() > 5) {
-            subgoal.x = path[2].getX();
-            subgoal.y = path[2].getY();
+        } else if (path.size() > 6) {
+            subgoal.x = path[6].getX();
+            subgoal.y = path[6].getY();
             subgoal.z = 87;
-        } else if (path.size() > 2 && path.size() <= 5) {
-            ROS_INFO_STREAM("[ASTAR]: WE ARE NOW CONTROL DESIRED POSE!");
-            subgoal.x = path[2].getX();
-            subgoal.y = path[2].getY();
-            subgoal.z = PI - myMap->getRobot().getPose();
-            /* limit z in the range -PI ~ PI */
-            if (subgoal.z > PI) {
-                subgoal.z -= 2*PI;
-            } else if (subgoal.z < -PI) {
-                subgoal.z += 2*PI;
-            }
+        } else if (path.size() > 1) {
+            subgoal.x = path.back().getX();
+            subgoal.y = path.back().getY();
+            subgoal.z = 0;
         } else {
             /* we're now in the goal */
             subgoal.x = myMap->getRobot().getPosition().getX();
