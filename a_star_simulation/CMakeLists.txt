@@ -47,3 +47,6 @@ target_link_libraries(map_astar_lab5_sim ${catkin_LIBRARIES})
 
 add_executable(nav_sim src/nav.cpp)
 target_link_libraries(nav_sim ${catkin_LIBRARIES})
+
+add_executable(a_star_planning src/a_star_planning.cpp)
+target_link_libraries(a_star_planning ${catkin_LIBRARIES})

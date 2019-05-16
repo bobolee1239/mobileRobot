@@ -3,4 +3,3 @@ rosnodejs_examples/
 ./CMakeLists.txt
 lab3*/
 ros-robotic-va/
-path_planning_follower/
