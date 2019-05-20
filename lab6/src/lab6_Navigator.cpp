@@ -18,7 +18,7 @@
 #include "a-star.h"                     //  My A* algo Library
 /*--------------------------------------------------------------------*/
 #define PI              3.14159265358979323
-#define VEHICLE_WIDTH   0.2             // Unit: meter
+#define VEHICLE_WIDTH   0.3            // Unit: meter
 #define RANDOM_STEP     6
 
 /* define topic name as following */
@@ -46,6 +46,7 @@ void updatePose(const geometry_msgs::Twist& pose);
 /* Pointer to our Map */
 Map* myMap = NULL;          //  to be initialized in callback fcn
 volatile PlanarInfo goal;   //  destination and desired pose
+bool notRecvGoalYet = true;
 /*--------------------------------------------------------------------*/
 int main(int argc, char* argv[]) {
     /* random random seed */
@@ -82,7 +83,7 @@ int main(int argc, char* argv[]) {
         ros::spinOnce();                // to be able to fire callback fcn
 
         /* do nothing if myMap is not yet created */
-        if (myMap == NULL)  continue;
+        if (myMap == NULL || notRecvGoalYet)  continue;
 
         Node dest(goal.x, goal.y);
         ROS_DEBUG_STREAM("[Navigator]: Finding path from "
@@ -90,13 +91,13 @@ int main(int argc, char* argv[]) {
                               myMap->at(myMap->getRobot().getPosition())))
                           << " -> " << dest);
         auto path = myMap->aStar(dest);
-        /*
+
          std::cout << "Found path: ";
          for (auto&& node : path) {
              std::cout << static_cast<Node>(node) << " -> ";
          }
          std::cout << std::endl;
-         */
+
         if (path.empty()) {
             ROS_INFO_STREAM("[Navigator]: RANDOM WALK FOR NO PATH FOUND!");
             subgoal.x = myMap->getRobot().getPosition().getX()
@@ -108,7 +109,7 @@ int main(int argc, char* argv[]) {
             subgoal.x = path[2].getX();
             subgoal.y = path[2].getY();
             subgoal.z = 87;
-        } else if (path.size() > 1) {
+        } else if (path.size() == 2) {
             subgoal.x = path.back().getX();
             subgoal.y = path.back().getY();
             subgoal.z = goal.th;
@@ -154,6 +155,7 @@ void handleRecvGoal(const geometry_msgs::PoseStamped& msg) {
 
     ROS_DEBUG_STREAM("[Navigator]: Goal (" << goal.x << ", " << goal.y << ") @"
                      << goal.th/PI*180.0);
+	notRecvGoalYet = false;
 }
 
 /**
@@ -183,6 +185,7 @@ void updatePose(const geometry_msgs::Twist& pose) {
     /* update postion */
     myMap->moveRobotTo(pose.linear.x, pose.linear.y);
     /* update pose */
+	ROS_DEBUG_STREAM("[NAVIGATOR] ROBOT_POSE_THEATA: " << pose.angular.z);
     myMap->getRobot().setPose(pose.angular.z);
 
     ROS_DEBUG_STREAM("[Navigator]: bot pos:" << myMap->dac(*static_cast<Node*>(

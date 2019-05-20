@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
   ros::NodeHandle np, ns;
 
   //  feedback_wheel_speed
-  ros::Subscriber vel_sub = ns.subscribe("feedback_Vel", 50, callback);
-  ros::Publisher odom_pub = np.advertise<nav_msgs::Odometry>("odom", 50);
+  ros::Subscriber vel_sub = ns.subscribe("/feedback_Vel", 50, callback);
+  ros::Publisher odom_pub = np.advertise<nav_msgs::Odometry>("/odom", 50);
 
   tf::TransformBroadcaster odom_broadcaster;
 

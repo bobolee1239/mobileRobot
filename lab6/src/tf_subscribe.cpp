@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     ros::NodeHandle n;
 
-    ros::Publisher state_pub = n.advertise<geometry_msgs::Twist>("robot_pose", 50);
+    ros::Publisher state_pub = n.advertise<geometry_msgs::Twist>("/robot_pose", 50);
 
     tf::TransformListener listener;
 
@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
      */
 
      echoListener.tf.waitForTransform("map",
-                                      "footprint",
+                                      "base_footprint",
                                       ros::Time(),
                                       ros::Duration(1.0));
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
            tf::StampedTransform echo_transform;
            // echoListener.tf.lookupTransform("map", "base_footprint", ros::Time(), echo_transform);
            echoListener.tf.lookupTransform("map",
-                                           "footprint",
+                                           "base_footprint",
                                            ros::Time(),
                                            echo_transform);
            double yaw, pitch, roll, th;
@@ -63,12 +63,28 @@ int main(int argc, char* argv[]) {
            transform.angular.y = pitch;
 
            th = yaw;
+           /*
            if (th >= 2*PI) {
                th -= 2*PI;
            } else if (th < 0) {
                th += 2*PI;
            }
-           transform.angular.z = th;
+
+           if (th > PI) {
+               th -= 2*PI;
+           } else if (th < -PI) {
+               th += 2*PI;
+           }
+ 		   */        
+  		   if (th>=PI)
+		      { th -=2*PI;}
+
+		   else if (th<=-PI)
+		   {
+		   th +=2*PI;
+		   }
+		   
+		   transform.angular.z = th;
 
            state_pub.publish(transform);
            //  printf("pose published\n");

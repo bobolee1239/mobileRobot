@@ -15,9 +15,9 @@
 #define PI 3.14159265358979323      // circumference ratio.
 
 // [TODO] ... adjusting the control gain !! ...
-const double k_rho      = 1.00; //1.00
-const double k_alpha    = 2.60; // 2.60
-const double k_beta     = 0.0;
+const double k_rho      = 0.70; // 0.85
+const double k_alpha    = 2.20; // 2.60
+const double k_beta     = 0.40;// 0.50
 
 /************************************************
  **  Global variables to allow communication
@@ -88,11 +88,13 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
     double yDiff = static_cast<double>(msg.y - y_now);
     double pDiff = static_cast<double>(msg.z - th_now);     //  pose angle diff
     //  Wrapping the pDiff in the range of -PI ~ PI
-    if (pDiff > PI) {
-      pDiff -= 2*PI;
-    } else if (pDiff < -PI) {
-      pDiff += 2*PI;
-    }
+	do {
+    	if (pDiff > PI) {
+    	  pDiff -= 2*PI;
+    	} else if (pDiff < -PI) {
+    	  pDiff += 2*PI;
+    	}
+	} while (pDiff < -PI || pDiff > PI);
 
     /**
      **  Euclidean distance between robot and target
@@ -103,11 +105,13 @@ void subgoalCallback(const geometry_msgs::Point &msg) {
      **/
     double headingAngleDiff = atan2(yDiff, xDiff) - th_now;
     /* wrapping the angle between -PI ~ PI */
-    if (headingAngleDiff > PI) {
-        headingAngleDiff -= 2*PI;
-    } else if (headingAngleDiff < -PI) {
-        headingAngleDiff += 2*PI;
-    }
+	do {
+    	if (headingAngleDiff > PI) {
+    	    headingAngleDiff -= 2*PI;
+    	} else if (headingAngleDiff < -PI) {
+    	    headingAngleDiff += 2*PI;
+    	}
+	} while (headingAngleDiff < -PI || headingAngleDiff > PI);
 
     double linear_vel  = k_rho    * distance;
     double angular_vel = k_alpha * headingAngleDiff;
