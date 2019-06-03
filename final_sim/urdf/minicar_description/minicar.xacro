@@ -1,0 +1,192 @@
+<?xml version="1.0"?>
+
+<robot name="minicar" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+  <xacro:property name="PI" value="3.1415926535897931"/>
+	<xacro:property name="DEG_TO_RAD" value="${PI/180.0}" />
+
+  <xacro:property name="chassisHeight" value="0.005"/>
+  <xacro:property name="chassisLength" value="0.34"/>
+  <xacro:property name="chassisWidth" value="0.24"/>
+  <xacro:property name="chassisMass" value="1.738"/>
+
+  <xacro:property name="casterRadius" value="0.036"/>
+  <xacro:property name="casterMass" value="0.1"/>
+
+  <xacro:property name="wheelWidth" value="0.026"/>
+  <xacro:property name="wheelRadius" value="0.038"/>
+  <xacro:property name="wheelPos" value="0.2"/>
+  <xacro:property name="wheelMass" value="0.045"/>
+
+  <!-- RP LIDAR specification-->
+  <xacro:property name="lidarHeight" value="0.038"/>
+  <xacro:property name="lidarRadius" value="0.038"/>
+  <xacro:property name="lidarMass" value="0.19"/>
+  <xacro:property name="laser_height" value="0.041" />
+  <xacro:property name="laser_radius" value="0.038" />
+  <xacro:property name="laser_mass" value="0.190" />
+  <xacro:property name="laser_update_rate" value="10" />
+  <xacro:property name="laser_sample" value="360" />
+  <xacro:property name="laser_resolution" value="1.0" />
+  <xacro:property name="laser_min_angle" value="${0*DEG_TO_RAD}" />
+  <xacro:property name="laser_max_angle" value="${360*DEG_TO_RAD}" />
+  <xacro:property name="laser_resolution_range" value="0.01" />
+  <xacro:property name="laser_min_range" value="0.15" />
+  <xacro:property name="laser_max_range" value="8.0" />
+
+
+  <xacro:include filename="$(find gazebo_sim)/urdf/minicar_description/minicar.gazebo" />
+  <xacro:include filename="$(find gazebo_sim)/urdf/minicar_description/materials.xacro" />
+  <xacro:include filename="$(find gazebo_sim)/urdf/minicar_description/macros.xacro" />
+
+  <link name="base_footprint" />
+
+<!--chassis-->
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+		<origin rpy="0 0 0" xyz="0 0 ${2*wheelRadius+chassisHeight/2}"/>
+  </joint>
+
+  <link name="base_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	<box size="${chassisLength} ${chassisWidth} ${chassisHeight}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	<box size="${chassisLength} ${chassisWidth} ${chassisHeight}"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${chassisMass}"/>
+      <box_inertia m="${chassisMass}" x="${chassisLength}" y="${chassisWidth}" z="${chassisHeight}"/>
+    </inertial>
+  </link>
+
+<!--caster_wheel-->
+  <joint name="fixed" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_wheel"/>
+		<origin rpy="0 0 0" xyz="0.085 0 ${casterRadius-2*wheelRadius}"/>
+  </joint>
+
+  <link name="caster_wheel">
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	<sphere radius="${casterRadius}"/>
+      </geometry>
+    </collision>
+  
+    <visual> 
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	<sphere radius="${casterRadius}"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${casterMass}"/>
+      <sphere_inertia m="${casterMass}" r="${casterRadius}"/>
+    </inertial>
+  </link>
+
+<!--wheels from macros.xacro-->
+  <wheel lr="left" tY="1"/>
+  <wheel lr="right" tY="-1"/>
+
+<!--lidar-->
+  <joint name="chassis_to_laser" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser"/>
+		<origin rpy="0 0 ${PI/2}" xyz="0.085 0 0.08"/>
+  </joint>
+
+  <link name="laser">
+
+	  <collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+      	<cylinder length="${lidarHeight}" radius="${lidarRadius}"/>
+      </geometry>
+   	</collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+       <cylinder length="${lidarHeight}" radius="${lidarRadius}"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="${wheelMass}"/>
+      <cylinder_inertia m="${lidarMass}" r="${lidarRadius}" h="${lidarHeight}"/>
+    </inertial>
+  </link>
+
+ 	<sensor name="laser_sensor" type="ray" update_rate="${laser_update_rate}">
+      <parent link="lidar" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <ray>
+          <horizontal>
+              <sample>${laser_sample}</sample>
+              <resolution>${laser_resolution}</resolution>
+              <min_angle>${laser_min_angle}</min_angle>
+              <max_angle>${laser_max_angle}</max_angle>
+          </horizontal>
+
+          <range>
+              <min>${laser_min_range}</min>
+              <max>${laser_max_range}</max>
+          </range>
+      </ray>
+  </sensor>
+
+  <gazebo reference="laser">
+      <material>Gazebo/Grey</material>
+      <sensor type="ray" name="laser_sensor">
+          <pose>0 0 0 0 0 0</pose>
+          <visualize>false</visualize>
+          <update_rate>${laser_update_rate}</update_rate>
+          <ray>
+              <scan>
+                  <horizontal>
+                      <samples>${laser_sample}</samples>
+                      <resolution>${laser_resolution}</resolution>
+                      <min_angle>${laser_min_angle}</min_angle>
+                      <max_angle>${laser_max_angle}</max_angle>
+                  </horizontal>
+              </scan>
+              <range>
+                  <min>${laser_min_range}</min>
+                  <max>${laser_max_range}</max>
+                  <resolution>${laser_resolution_range}</resolution>
+              </range>
+              <noise>
+                  <type>gaussian</type>
+                  <mean>0.0</mean>
+                  <stddev>0.01</stddev>
+              </noise>
+          </ray>
+          <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+              <topicName>/scan</topicName>
+              <frameName>laser</frameName>
+          </plugin>
+      </sensor>
+  </gazebo>
+
+</robot>

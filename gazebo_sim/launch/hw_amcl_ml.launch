@@ -76,7 +76,7 @@ r -->
     <param name="resample_interval" value="1"/>
     <param name="transform_tolerance" value="0.1" />
     <param name="recovery_alpha_slow" value="0.99" />
-    <param name="recovery_alpha_fast" value="0.8" />
+    <param name="recovery_alpha_fast" value="0.70" />
   </node>
 
   <!-- rviz -->
